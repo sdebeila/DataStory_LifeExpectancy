@@ -1,10 +1,10 @@
 # Beating the Odds: Countries That Live Longer Than Their Income Predicts
 
-**Course:** Visual Communication and Data Storytelling
-**Program:** MSc Data Science for Society and Business (MDSSB)
-**University:** Constructor University Bremen
-**Data Story Keyword:** LifeExpectancy
-**Team Members:** Shaleen Debeila, Rebeccah Kapsekei, Lutendo Mulea, Morné Magerman, Limpo Shawa
+- **Course:** Visual Communication and Data Storytelling
+- **Program:** MSc Data Science for Society and Business (MDSSB)
+- **University:** Constructor University Bremen
+- **Data Story Keyword:** LifeExpectancy
+- **Team Members:** Shaleen Debeila, Rebeccah Kapsekei, Lutendo Mulea, Morné Magerman, Limpo Shawa
 
 ## Project Overview
 
@@ -65,7 +65,7 @@ Our preliminary analysis and research have identified the following insights:
 - **Insight 1: Wealth matters, but it does not tell the whole story.** National income is strongly associated with life expectancy. Our preliminary analysis suggests that income accounts for approximately three-quarters of the observed cross-country variation in life expectancy in 2022 (see Data and Methodology for how this is calculated).
 - **Insight 2: Five countries achieve longer lives than their income predicts.** Cuba, Nicaragua, Bangladesh, Lebanon, and Cape Verde appear to achieve life expectancy approximately 5–7 years above income-based expectations.
 - **Insight 3: Healthcare spending does not provide a complete explanation.** The five countries have very different healthcare spending levels relative to countries at similar incomes. Preliminary comparisons suggest that Bangladesh spends about half as much as its income peers, while Cuba spends nearly five times as much.
-- **Insight 4: Social and environmental conditions may matter.** Child survival appears to account for part of the gap: Cuba, Nicaragua, and Cape Verde have fewer child deaths than their income predicts, while Bangladesh and Lebanon do not. Because child deaths lower life expectancy directly, this is partly built into how life expectancy is calculated. Sanitation and education are still to be tested, and healthcare access is a candidate for which we have not yet identified a suitable dataset.
+- **Insight 4: Social and environmental conditions may matter.** Child survival appears to account for part of the gap: Cuba, Nicaragua, and Cape Verde have fewer child deaths than their income predicts, while Bangladesh and Lebanon do not. Because child deaths lower life expectancy directly, this is partly built into how life expectancy is calculated. Better-than-expected sanitation also goes together with a larger gap across 153 countries (a clearer link; Cuba, Lebanon, and Cape Verde fit, Bangladesh does not, and Nicaragua is not in the data), while years of schooling shows only a weak link (Lebanon and Cape Verde are not in the data, and values from 2015 onwards are projections). Healthcare access is a candidate for which we have not yet identified a suitable dataset.
 - **Insight 5: Income inequality alone may not explain the differences.** Preliminary analysis suggests a very weak relationship between the Gini index and countries' deviations from income-based life expectancy expectations. However, missing data (only two of the five countries have a recent value) limits the strength of this conclusion.
 - **Insight 6: Global life expectancy has improved, but regional inequalities persist.** Life expectancy has increased substantially across world regions since 1950. The gap between Europe and Africa narrowed from 24.8 years in 1950 to 15.3 years in 2023, but remains considerable.
 
@@ -103,7 +103,7 @@ Five countries live approximately 5–7 years longer than their income would pre
 
 ### Narrative Abstract
 
-Why do people in some countries live longer than those in countries with similar economic resources? Using 2022 data from Our World in Data covering approximately 165 countries, our project investigates the relationship between national income and life expectancy, revealing that wealth explains much, but not everything, about differences in longevity. Preliminary findings suggest that five countries, Cuba, Nicaragua, Bangladesh, Lebanon, and Cape Verde, achieve life expectancy approximately five to seven years above income-based expectations. Interestingly, their healthcare spending patterns differ substantially, suggesting that expenditure alone may not fully account for these outcomes. We therefore explore whether other socioeconomic conditions, including child survival, sanitation, education, and inequality, are associated with these differences. Through accessible visualizations and country comparisons, our story aims to help a general audience understand why economic prosperity does not always translate into the same health outcomes. Ultimately, we highlight how countries performing above expectations may provide valuable starting points for understanding opportunities to improve population health, while recognizing that observed relationships do not establish causation.
+Why do people in some countries live longer than those in countries with similar economic resources? Using 2022 data from Our World in Data covering approximately 165 countries, our project investigates the relationship between national income and life expectancy, revealing that wealth explains much, but not everything, about differences in longevity. Preliminary findings suggest that five countries, Cuba, Nicaragua, Bangladesh, Lebanon, and Cape Verde, achieve life expectancy approximately five to seven years above income-based expectations. Interestingly, their healthcare spending patterns differ substantially, suggesting that expenditure alone may not fully account for these outcomes. Across countries, lower child mortality and better sanitation than income would predict are associated with larger gaps, while schooling and income inequality show little association, and none of these factors explains all five countries. Through accessible visualizations and country comparisons, our story aims to help a general audience understand why economic prosperity does not always translate into the same health outcomes. Ultimately, we highlight how countries performing above expectations may provide valuable starting points for understanding opportunities to improve population health, while recognizing that observed relationships do not establish causation.
 
 ## Data and Methodology
 
@@ -118,7 +118,8 @@ Our analysis uses publicly available country-level datasets, primarily obtained 
 | Healthcare expenditure per capita | WHO / World Bank via Our World in Data | Compare health spending |
 | Income inequality (Gini index) | World Bank Poverty and Inequality Platform | Explore income distribution |
 | Child mortality | UN Inter-agency Group for Child Mortality Estimation via Our World in Data | Investigate possible explanations (tested) |
-| Sanitation, years of schooling | Our World in Data (to be downloaded; latest available year, schooling data is older than 2022) | Investigate possible explanations (to be tested) |
+| Sanitation (share using at least basic sanitation) | WHO/UNICEF Joint Monitoring Programme via Our World in Data | Investigate possible explanations (tested, 2022) |
+| Average years of schooling | Barro and Lee via Our World in Data (latest year 2020, partly projected) | Investigate possible explanations (tested, weak link) |
 
 **Main analysis year:** 2022. GDP per capita from the Maddison Project ends in 2022, so 2022 is the latest year with matching data.
 
@@ -169,7 +170,7 @@ The analysis is written in Python (pandas, numpy, matplotlib) inside a Quarto re
 | `Report.qmd` | News-style written data story with the full, reproducible analysis (Python) |
 | `index.qmd` | Website entry page |
 | `presentation.qmd` | Quarto RevealJS narrative presentation |
-| `data/` | The five Our World in Data files used in the analysis: `life-expectancy.csv`, `gdp-per-capita-maddison-project-database.csv`, `annual-healthcare-expenditure-per-capita.csv`, `child-mortality.csv`, `gini-coefficient.csv` |
+| `data/` | The seven Our World in Data files used in the analysis: `life-expectancy.csv`, `gdp-per-capita-maddison-project-database.csv`, `annual-healthcare-expenditure-per-capita.csv`, `child-mortality.csv`, `gini-coefficient.csv`, `share-of-population-with-improved-sanitation-faciltities.csv`, `mean-years-of-schooling-long-run.csv` |
 | `_quarto.yml` | Website configuration |
 
 **To render the report:** install the packages with `python -m pip install pandas numpy matplotlib jupyter`, then run `quarto render Report.qmd` from the repository root.
@@ -186,7 +187,7 @@ The analysis is written in Python (pandas, numpy, matplotlib) inside a Quarto re
 Our next steps are to:
 1. Render and review `Report.qmd`, then move its charts into the presentation.
 2. Confirm the final main insight using the analysis.
-3. Test sanitation and years of schooling against the gap between actual and expected life expectancy, and report which factors show a clear association. (Child mortality has been tested.)
+3. Review how strong the evidence is for each factor (child mortality and sanitation show clearer links than schooling and inequality), and decide which to feature in the final story.
 4. Develop the main visualizations.
 5. Draft the news-style report and narrative presentation.
 6. Review the story for clarity and accessibility to nontechnical audiences.
