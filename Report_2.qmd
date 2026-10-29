@@ -1,0 +1,432 @@
+---
+title: "Beating the Odds"
+subtitle: "Countries That Live Longer Than Their Income Predicts"
+author: "Shaleen Debeila, Rebeccah Kapsekei, Lutendo Mulea, Morné Magerman, Limpo Shawa"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "Show analysis code"
+    embed-resources: true
+    theme: cosmo
+jupyter: python3
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{python}
+#| label: setup
+#| include: false
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib.ticker import FuncFormatter
+
+plt.rcParams.update({"font.size": 11, "axes.spines.top": False, "axes.spines.right": False})
+
+DATA = Path("data")
+YEAR = 2022
+N_TOP = 5
+
+# Conflict-affected or closed economies with highly uncertain estimates.
+# Left out of the trend line and the ranking, shown as hollow markers.
+EXCLUDE = ["Central African Republic", "North Korea", "Syria", "Palestine"]
+
+ORANGE, BLUE, GREY = "#d95f02", "#1f4e79", "#b0b0b0"
+
+
+def read_owid(file, value_name, countries_only=True):
+    """Our World in Data CSVs: Entity, Code, Year, <value>. Keep the first four columns."""
+    df = pd.read_csv(DATA / file).iloc[:, :4]
+    df.columns = ["country", "code", "year", value_name]
+    if countries_only:
+        df = df[df["code"].notna() & ~df["code"].astype(str).str.startswith("OWID")]
+    return df
+
+
+def md_table(df):
+    """Small helper that prints a data frame as a Markdown table."""
+    header = "| " + " | ".join(df.columns) + " |"
+    rule = "|" + "|".join(["---"] * len(df.columns)) + "|"
+    rows = ["| " + " | ".join(str(v) for v in r) + " |" for r in df.itertuples(index=False)]
+    return "\n".join([header, rule] + rows)
+
+
+def difference_from_income(df, value_col, gdp_col="gdp_pc"):
+    """Value minus the value expected for the country's income (straight-line fit on log GDP).
+    Used for shares and years, where a ratio makes less sense. 0 = typical for income."""
+    b, a = np.polyfit(np.log10(df[gdp_col]), df[value_col], 1)
+    return df[value_col] - (a + b * np.log10(df[gdp_col]))
+
+
+def relative_to_income(df, value_col, gdp_col="gdp_pc"):
+    """Ratio of a country's value to the value expected for its income (log-log fit).
+    1.0 = same as countries with similar income; 0.5 = half; 2.0 = double."""
+    b, a = np.polyfit(np.log10(df[gdp_col]), np.log10(df[value_col]), 1)
+    return df[value_col] / 10 ** (a + b * np.log10(df[gdp_col]))
+```
+
+```{python}
+#| label: load-data
+#| include: false
+# ---- Life expectancy and GDP per capita (2022 only; nothing is carried forward) ----
+life_all = read_owid("life-expectancy.csv", "life_exp", countries_only=False)
+life = read_owid("life-expectancy.csv", "life_exp")
+gdp = read_owid("gdp-per-capita-maddison-project-database.csv", "gdp_pc")
+
+d = life[life["year"] == YEAR].merge(gdp[gdp["year"] == YEAR], on=["country", "code", "year"])
+d = d[d["gdp_pc"] > 0].dropna(subset=["life_exp", "gdp_pc"])
+
+# ---- Income-based benchmark: life expectancy ~ log10(GDP per capita) ----
+fit = d[~d["country"].isin(EXCLUDE)].copy()
+slope, intercept = np.polyfit(np.log10(fit["gdp_pc"]), fit["life_exp"], 1)
+fit["expected"] = intercept + slope * np.log10(fit["gdp_pc"])
+fit["gap"] = fit["life_exp"] - fit["expected"]  # actual minus expected
+r2 = 1 - ((fit["life_exp"] - fit["expected"]) ** 2).sum() / ((fit["life_exp"] - fit["life_exp"].mean()) ** 2).sum()
+
+top = fit.nlargest(N_TOP, "gap").copy()
+excluded_shown = d[d["country"].isin(EXCLUDE) & (d["country"] != "Central African Republic")]
+
+# ---- Health spending per person (PPP), relative to income peers ----
+hx = read_owid("annual-healthcare-expenditure-per-capita.csv", "hx")
+s = fit.merge(hx[hx["year"] == YEAR][["country", "hx"]], on="country").dropna(subset=["hx"])
+s = s[s["hx"] > 0].copy()
+s["hx_ratio"] = relative_to_income(s, "hx")
+corr_hx = np.corrcoef(s["gap"], np.log10(s["hx_ratio"]))[0, 1]
+
+# ---- Child mortality (% of newborns dying before age 5), relative to income peers ----
+cm = read_owid("child-mortality.csv", "cm")
+c = fit.merge(cm[cm["year"] == YEAR][["country", "cm"]], on="country").dropna(subset=["cm"])
+c = c[c["cm"] > 0].copy()
+c["cm_ratio"] = relative_to_income(c, "cm")
+corr_cm = np.corrcoef(c["gap"], np.log10(c["cm_ratio"]))[0, 1]
+
+# ---- Income inequality (Gini), latest survey in 2017-2022 ----
+gini = read_owid("gini-coefficient.csv", "gini")
+g = (gini[(gini["year"] >= 2017) & (gini["year"] <= 2022)]
+     .sort_values("year").groupby("country").tail(1)[["country", "gini"]])
+q = fit.merge(g, on="country")
+corr_gini = np.corrcoef(q["gap"], q["gini"])[0, 1]
+
+# ---- Sanitation: share of people using at least basic sanitation, 2022 ----
+# The download is named "...-faciltities.csv" (Our World in Data's spelling) or "...-facilities.csv";
+# find it whichever way it is spelled.
+san_files = sorted(DATA.glob("share-of-population-with-improved-sanitation*.csv"))
+if not san_files:
+    raise FileNotFoundError("Put the sanitation CSV (share-of-population-with-improved-sanitation-...csv) in the data/ folder.")
+san = read_owid(san_files[0].name, "san")
+sn = fit.merge(san[san["year"] == YEAR][["country", "san"]], on="country").dropna(subset=["san"]).copy()
+sn["san_diff"] = difference_from_income(sn, "san")
+corr_san = np.corrcoef(sn["gap"], sn["san_diff"])[0, 1]
+
+# ---- Schooling: average years, latest available year (2020; partly projected) ----
+SCHOOL_YEAR = 2020
+sch = read_owid("mean-years-of-schooling-long-run.csv", "sch")
+sc = fit.merge(sch[sch["year"] == SCHOOL_YEAR][["country", "sch"]], on="country").dropna(subset=["sch"]).copy()
+sc["sch_diff"] = difference_from_income(sc, "sch")
+corr_sch = np.corrcoef(sc["gap"], sc["sch_diff"])[0, 1]
+
+five = top["country"].tolist()
+five_text = ", ".join(five[:-1]) + " and " + five[-1]
+gap_lo, gap_hi = top["gap"].min(), top["gap"].max()
+```
+
+# The short version
+
+*Wealth matters for how long people live, but it does not settle it.* Across the world, richer countries tend to live longer. Yet some countries live noticeably longer than their income would suggest. This story looks at the five that do so by the widest margin in 2022, and asks what might help explain it.
+
+```{python}
+#| label: summary
+#| output: asis
+print(f"""
+- **Income explains a lot, but not everything.** Across {len(fit)} countries, income alone accounts for about {r2:.0%} of the differences in life expectancy.
+- **Five countries beat the odds.** {five_text} live roughly {gap_lo:.0f} to {gap_hi:.0f} years longer than their income would predict.
+- **There is no single route.** Health spending relative to income varies widely among the five, and lower child mortality and better sanitation than expected fit some of them but not all.
+- **These are associations, not proof of cause.** Our data shows patterns that are worth investigating, not what made them happen.
+""")
+```
+
+# 1. The big picture: do richer countries live longer?
+
+Life expectancy has risen in every region of the world since 1950. The gap between regions has narrowed, but it has not closed.
+
+```{python}
+#| label: fig-regions
+#| fig-cap: "Life expectancy by world region, 1950–2023. Source: Our World in Data (UN World Population Prospects)."
+regions = {"Europe": "#4c6a9c", "Oceania": "#8c8c8c", "Americas": "#c8553d",
+           "Asia": "#2a9d8f", "World": "#1b4d1b", "Africa": "#a64ca6"}
+fig, ax = plt.subplots(figsize=(9, 5.4))
+for name, colour in regions.items():
+    sub = life_all[(life_all["country"] == name) & (life_all["year"] >= 1950)]
+    ax.plot(sub["year"], sub["life_exp"], color=colour, lw=3 if name == "World" else 2)
+    if name == "Oceania":      # same end value as Europe, so share one label
+        continue
+    label = "Europe / Oceania" if name == "Europe" else name
+    ax.text(sub["year"].max() + 1, sub["life_exp"].iloc[-1], label, color=colour,
+            fontweight="bold", va="center", fontsize=10)
+ax.set_xlim(1950, 2040)
+ax.set_xticks(range(1950, 2030, 10))
+ax.set_ylabel("Life expectancy at birth (years)")
+ax.grid(axis="y", ls="--", alpha=0.3)
+plt.show()
+```
+
+```{python}
+#| label: regions-text
+#| output: asis
+def region_value(name, year):
+    return float(life_all[(life_all["country"] == name) & (life_all["year"] == year)]["life_exp"].iloc[0])
+
+gap1950 = region_value("Europe", 1950) - region_value("Africa", 1950)
+gap2023 = region_value("Europe", 2023) - region_value("Africa", 2023)
+print(f"In 1950, people in Europe lived about {gap1950:.0f} years longer than people in Africa. "
+      f"By 2023 that gap had narrowed to about {gap2023:.0f} years, but it remains large.")
+```
+
+Does money explain the differences? To find out, we compare each country's life expectancy with its income per person in 2022. Income is shown on a logarithmic scale, which means each step to the right is a tenfold increase.
+
+```{python}
+#| label: fig-scatter
+#| fig-cap: "Life expectancy and GDP per capita, 2022. The blue line is the income-based expectation. Hollow markers are countries left out of the trend because their data is highly uncertain."
+x_line = np.logspace(np.log10(d["gdp_pc"].min() * 0.9), np.log10(d["gdp_pc"].max() * 1.1), 200)
+fig, ax = plt.subplots(figsize=(9, 6))
+ax.scatter(fit["gdp_pc"], fit["life_exp"], s=28, color=GREY, alpha=0.85, lw=0)
+ax.scatter(excluded_shown["gdp_pc"], excluded_shown["life_exp"], s=34, facecolors="none", edgecolors="#9a9a9a")
+ax.plot(x_line, intercept + slope * np.log10(x_line), color=BLUE, lw=2)
+ax.set_xscale("log")
+ax.set_ylim(45, 90)
+ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:,.0f}"))
+ax.set_xlabel("GDP per capita (international dollars, 2011 prices, log scale)")
+ax.set_ylabel("Life expectancy at birth (years)")
+ax.grid(axis="y", ls="--", alpha=0.3)
+plt.show()
+```
+
+```{python}
+#| label: scatter-text
+#| output: asis
+print(f"The pattern is clear: richer countries tend to live longer, with diminishing returns at high incomes. "
+      f"Income alone accounts for about {r2:.0%} of the differences between the {len(fit)} countries in our trend. "
+      f"That leaves a lot unexplained, and some countries sit well above the line.")
+```
+
+# 2. The surprise: five countries beat the odds
+
+We call the distance between a country's actual life expectancy and the value expected for its income the **gap**. A positive gap means people live longer than income alone would predict. Here are the five countries with the largest positive gaps in 2022.
+
+```{python}
+#| label: fig-top
+#| fig-cap: "The five countries furthest above the income trend, 2022. Labels show the gap in years."
+offsets = {"Cuba": (-70, 28), "Lebanon": (30, 32), "Cape Verde": (40, -40),
+           "Nicaragua": (-95, 22), "Bangladesh": (-100, -30)}
+fig, ax = plt.subplots(figsize=(9, 6))
+ax.scatter(fit["gdp_pc"], fit["life_exp"], s=28, color=GREY, alpha=0.85, lw=0)
+ax.scatter(excluded_shown["gdp_pc"], excluded_shown["life_exp"], s=34, facecolors="none", edgecolors="#9a9a9a")
+ax.plot(x_line, intercept + slope * np.log10(x_line), color=BLUE, lw=2)
+ax.scatter(top["gdp_pc"], top["life_exp"], s=90, color=ORANGE, zorder=3)
+for _, r in top.iterrows():
+    ax.annotate(f"{r['country']} (+{r['gap']:.1f})", (r["gdp_pc"], r["life_exp"]),
+                xytext=offsets.get(r["country"], (8, 8)), textcoords="offset points",
+                color=ORANGE, fontweight="bold", fontsize=10,
+                arrowprops=dict(arrowstyle="-", color=ORANGE, lw=1))
+ax.set_xscale("log")
+ax.set_ylim(45, 90)
+ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:,.0f}"))
+ax.set_xlabel("GDP per capita (international dollars, 2011 prices, log scale)")
+ax.set_ylabel("Life expectancy at birth (years)")
+ax.grid(axis="y", ls="--", alpha=0.3)
+plt.show()
+```
+
+```{python}
+#| label: top-table
+#| output: asis
+tbl = top[["country", "life_exp", "expected", "gap"]].copy()
+tbl.columns = ["Country", "Actual life expectancy", "Expected for income", "Gap (years)"]
+for col in tbl.columns[1:]:
+    tbl[col] = tbl[col].round(1)
+print(md_table(tbl))
+print("\n: The five countries with the largest positive gaps, 2022 {#tbl-top}\n")
+```
+
+# 3. Beyond income: what else might matter?
+
+## Health spending: more than one route
+
+If money buys health, countries that beat the odds might simply spend more on health care. We compare each country's health spending per person with what countries at a similar income spend (a value of 1.0 means typical for that income).
+
+```{python}
+#| label: fig-spending
+#| fig-cap: "Health spending per person relative to countries with similar incomes, 2022 (log scale; 1x = typical for income). Labels show each country's life expectancy gap."
+t = s[s["country"].isin(five)].sort_values("hx_ratio")
+fig, ax = plt.subplots(figsize=(9, 4.8))
+colours = [ORANGE if r >= 1 else "#7570b3" for r in t["hx_ratio"]]
+ax.barh(t["country"], t["hx_ratio"] - 1, left=1, color=colours, height=0.55)
+ax.axvline(1, color="#333", lw=1.2)
+ax.set_xscale("log")
+ax.set_xlim(0.3, 9)
+ax.set_xticks([0.3, 0.5, 1, 2, 4])
+ax.set_xticklabels(["0.3x", "0.5x", "1x", "2x", "4x"])
+for i, (_, r) in enumerate(t.iterrows()):
+    ax.text(max(r["hx_ratio"], 1) * 1.1, i, f"{r['hx_ratio']:.1f}x   (gap +{r['gap']:.1f} yrs)", va="center", fontsize=10)
+ax.spines["left"].set_visible(False)
+ax.tick_params(axis="y", length=0)
+ax.grid(axis="x", ls="--", alpha=0.3)
+plt.show()
+```
+
+```{python}
+#| label: spending-text
+#| output: asis
+lo = t.iloc[0]; hi = t.iloc[-1]
+print(f"{hi['country']} spends about {hi['hx_ratio']:.1f} times what its income peers spend, while "
+      f"{lo['country']} spends about {lo['hx_ratio']:.1f} times as much. Across {len(s)} countries, "
+      f"spending relative to income is moderately associated with the gap (correlation {corr_hx:.2f}), "
+      f"so spending seems to be part of the story, but not the whole story. "
+      f"Spending also says little about how well the money is used, and the estimate for {hi['country']} is uncertain.")
+```
+
+## Child survival: part of the explanation
+
+Deaths of young children pull down average life expectancy, so countries where fewer children die than their income would predict tend to show a positive gap.
+
+```{python}
+#| label: fig-child
+#| fig-cap: "Child mortality relative to countries with similar incomes (horizontal axis, log scale; below 1x means lower than expected) and the life expectancy gap (vertical axis), 2022."
+fig, ax = plt.subplots(figsize=(9, 5.8))
+ax.axhline(0, color="#333", lw=1)
+ax.axvline(1, color="#999", lw=1, ls="--")
+ax.scatter(c["cm_ratio"], c["gap"], s=28, color=GREY, alpha=0.85, lw=0)
+h = c[c["country"].isin(five)]
+ax.scatter(h["cm_ratio"], h["gap"], s=90, color=ORANGE, zorder=3)
+label_offsets = {"Cuba": (-55, 12), "Nicaragua": (-5, 42), "Cape Verde": (-75, -42),
+                 "Lebanon": (-5, 48), "Bangladesh": (40, 30)}
+for _, r in h.iterrows():
+    ax.annotate(r["country"], (r["cm_ratio"], r["gap"]), xytext=label_offsets.get(r["country"], (8, 8)),
+                textcoords="offset points", color=ORANGE, fontweight="bold",
+                arrowprops=dict(arrowstyle="-", color=ORANGE, lw=1))
+ax.set_xscale("log")
+ax.set_xticks([0.25, 0.5, 1, 2, 4])
+ax.set_xticklabels(["0.25x", "0.5x", "1x", "2x", "4x"])
+ax.set_xlabel("Child mortality relative to income peers (below 1x = fewer child deaths than expected)")
+ax.set_ylabel("Life expectancy gap (years)")
+ax.grid(ls="--", alpha=0.3)
+plt.show()
+```
+
+```{python}
+#| label: child-text
+#| output: asis
+lower = h[h["cm_ratio"] < 0.8]["country"].tolist()
+typical = h[h["cm_ratio"] >= 0.8]["country"].tolist()
+print(f"Across {len(c)} countries, lower-than-expected child mortality goes together with a larger gap "
+      f"(correlation {corr_cm:.2f}). Among our five, {', '.join(lower)} have clearly fewer child deaths than their income predicts, "
+      f"while {' and '.join(typical)} are about typical. So early-life survival may help explain some of the five, "
+      f"but not all. Because child deaths lower life expectancy directly, part of this link is built into how life expectancy is calculated.")
+```
+
+## Inequality: little to add
+
+```{python}
+#| label: gini-text
+#| output: asis
+have = [x for x in five if x in q["country"].values]
+print(f"Income inequality (the Gini index) has only a very weak link to the gap (correlation {corr_gini:.2f} across {len(q)} countries). "
+      f"Recent survey data is also missing for most of our five; only {' and '.join(have)} have a value for 2017–2022.")
+```
+
+## Sanitation: a clearer link
+
+Safe sanitation keeps disease from spreading. Here we compare the share of people using at least basic sanitation with what is typical for each country's income.
+
+```{python}
+#| label: fig-sanitation
+#| fig-cap: "Sanitation relative to countries with similar incomes (horizontal axis, percentage points; right of zero = better than expected) and the life expectancy gap (vertical axis), 2022."
+def diff_chart(df, xcol, xlabel, offsets):
+    fig, ax = plt.subplots(figsize=(9, 5.8))
+    ax.axhline(0, color="#333", lw=1)
+    ax.axvline(0, color="#999", lw=1, ls="--")
+    ax.scatter(df[xcol], df["gap"], s=28, color=GREY, alpha=0.85, lw=0)
+    hh = df[df["country"].isin(five)]
+    ax.scatter(hh[xcol], hh["gap"], s=90, color=ORANGE, zorder=3)
+    for _, r in hh.iterrows():
+        ax.annotate(r["country"], (r[xcol], r["gap"]), xytext=offsets.get(r["country"], (10, 12)),
+                    textcoords="offset points", color=ORANGE, fontweight="bold",
+                    arrowprops=dict(arrowstyle="-", color=ORANGE, lw=1))
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Life expectancy gap (years)")
+    ax.grid(ls="--", alpha=0.3)
+    plt.show()
+
+diff_chart(sn, "san_diff", "Sanitation relative to income peers (percentage points; above 0 = better than expected)",
+           {"Cuba": (-60, 30), "Lebanon": (10, 34), "Cape Verde": (-30, -38), "Bangladesh": (30, 34)})
+```
+
+```{python}
+#| label: sanitation-text
+#| output: asis
+sn5 = sn[sn["country"].isin(five)]
+better = sn5[sn5["san_diff"] > 5]["country"].tolist()
+typical_s = sn5[sn5["san_diff"] <= 5]["country"].tolist()
+missing_s = [x for x in five if x not in sn["country"].values]
+verb = "is" if len(typical_s) == 1 else "are"
+txt = (f"Across {len(sn)} countries, better-than-expected sanitation goes together with a larger gap "
+       f"(correlation {corr_san:.2f}), a clearer link than we found for income inequality. "
+       f"{', '.join(better)} have much better sanitation than their income predicts, "
+       f"while {' and '.join(typical_s)} {verb} about typical.")
+if missing_s:
+    txt += f" {' and '.join(missing_s)} is not in the sanitation data."
+print(txt)
+```
+
+## Schooling: only a weak link
+
+```{python}
+#| label: fig-schooling
+#| fig-cap: "Average years of schooling relative to countries with similar incomes (horizontal axis, years; right of zero = more schooling than expected) and the life expectancy gap (vertical axis). Schooling is for 2020."
+diff_chart(sc, "sch_diff", "Years of schooling relative to income peers (years; above 0 = more than expected)",
+           {"Cuba": (-40, 30), "Nicaragua": (20, 34), "Bangladesh": (-70, 32)})
+```
+
+```{python}
+#| label: schooling-text
+#| output: asis
+missing_c = [x for x in five if x not in sc["country"].values]
+print(f"Across {len(sc)} countries, years of schooling relative to income has only a weak link to the gap "
+      f"(correlation {corr_sch:.2f}). Among the five, Cuba has clearly more schooling than its income predicts, while "
+      f"Bangladesh and Nicaragua are about typical. {' and '.join(missing_c)} are not in the schooling data. "
+      f"The schooling figures for 2015 onwards are projections, so we treat this result with extra care.")
+```
+
+# What this means
+
+Money matters, but it is not the whole story. Countries with very different incomes and health budgets can still live longer than expected, and they get there by different routes. These countries do not prove that a particular policy works. They are good starting points for asking what else is going on.
+
+# How we did it
+
+- **Data:** Our World in Data, year 2022 only (nothing carried forward from earlier years). Life expectancy comes from UN World Population Prospects, GDP per capita from the Maddison Project Database 2023, health spending per person (PPP) from the WHO via the World Bank, child mortality from the UN Inter-agency Group for Child Mortality Estimation, the Gini index from the World Bank Poverty and Inequality Platform, sanitation from the WHO/UNICEF Joint Monitoring Programme, and average years of schooling from Barro and Lee (the 2020 values are partly projections).
+- **Expected life expectancy:** a straight-line trend of life expectancy against the logarithm of GDP per capita. "Predicts" in our title means this fitted estimate, not a forecast of the future. A country's gap is its actual life expectancy minus the expected value.
+- **Relative to income:** for spending and child mortality, we compare each country with the value typical for its income, using the same kind of trend on a log scale.
+
+```{python}
+#| label: sample-text
+#| output: asis
+print(f"**Sample.** {len(d)} countries have both life expectancy and income in 2022. We left out "
+      f"Central African Republic, North Korea, Syria and Palestine because conflict or closed economies make their "
+      f"estimates highly uncertain, so the trend uses {len(fit)} countries. With them included, the trend would explain "
+      f"less, and North Korea, Syria and Palestine would appear among the largest gaps.")
+```
+
+## Limits
+
+- One year only, so we cannot say how things change over time.
+- All results are associations, not causes.
+- Income is measured per person and adjusted for living costs, but both income and spending are estimates, especially for lower-income countries.
+- Spending per person says nothing about the quality or reach of health care.
+- Five countries are illustrations. The patterns are tested across all countries with data.
