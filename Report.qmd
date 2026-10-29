@@ -1,0 +1,256 @@
+
+---
+title: "Beating the Odds"
+subtitle: "Countries That Live Longer Than Their Income Predicts"
+author: "Data Storytelling Project Team"
+date: "2026-10-28"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Show analysis code"
+    code-tools: true
+    embed-resources: true
+    theme: cosmo
+    fig-responsive: true
+execute:
+  echo: true
+  warning: false
+  message: false
+jupyter: python3
+---
+
+# Executive summary
+
+**Research question:** Why do some countries achieve higher life expectancy than their income levels would predict, and what factors might help explain their better-than-expected outcomes?
+
+This reproducible report follows the project's three-part narrative: the global income–longevity relationship; countries with the largest positive gaps; and potential explanations beyond income. The primary analysis is a 2022 cross-section. **The WDI current-dollar income series used here differs from the Maddison series used for preliminary README results; rankings must not be treated as directly comparable.**
+
+# 1. Data sources and preparation
+
+The country-year panel combines World Bank World Development Indicators and WHO Global Health Observatory obesity data. The separate HadCRUT5 global series is used only as historical context. Both input files must be placed in the `data/` directory (or alongside this `.qmd`).
+
+```{python}
+#| label: setup
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from pathlib import Path
+from scipy.stats import pearsonr
+import statsmodels.api as sm
+from IPython.display import display, Markdown
+
+plt.rcParams.update({'figure.figsize': (9, 5), 'font.size': 11})
+def locate(filename):
+    for path in [Path('data') / filename, Path(filename), Path('/mnt/data') / filename]:
+        if path.exists():
+            return path
+    raise FileNotFoundError(f'Place {filename} in data/ or next to final_report.qmd')
+
+panel = pd.read_csv(locate('country_panel_wdi_who(1).csv'), na_values=['NA'])
+climate = pd.read_csv(locate('HadCRUT.5.0.2.0.analysis.summary_series.global.annual(1).csv'))
+assert not panel.duplicated(['country_code', 'year']).any(), 'Duplicate country-years require investigation'
+print(f'Panel: {len(panel):,} rows, {panel.country_code.nunique()} country codes, years {panel.year.min()}–{panel.year.max()}')
+```
+## 1.1 Indicator coverage in 2022
+
+```{python}
+#| label: indicator-coverage
+p22 = panel.loc[panel.year == 2022]
+indicator_columns = [c for c in panel.columns if c not in ['country_name','country_code','year','region','income_group']]
+coverage = pd.DataFrame({'Indicator': indicator_columns,
+                         'Non-missing country observations': [p22[c].notna().sum() for c in indicator_columns]})
+display(coverage)
+```
+
+**Data-quality warning:** The original extraction script forward-filled indicator values by country. Consequently, a value shown for 2022 might have been recorded in an earlier year. Without the raw unfilled extract, this cannot be reversed. The report does not interpret nonmissingness as proof of a contemporary observation.
+
+# 2. Methods: an income-based longevity benchmark
+
+We estimate the cross-sectional ordinary least squares model
+
+$$\mathrm{LifeExpectancy}_i = \alpha + \beta\ln(\mathrm{GDPperCapita}_i) + \varepsilon_i.$$
+
+The country-level **gap** is observed life expectancy minus fitted life expectancy. A positive gap identifies a country above this *descriptive* income benchmark; it is not evidence of a causal policy effect.
+
+```{python}
+#| label: baseline-model
+excluded = ['Central African Republic','North Korea','Syrian Arab Republic',
+            'Syria','West Bank and Gaza','Palestine']
+base = panel.loc[(panel.year == 2022) & ~panel.country_name.isin(excluded)].copy()
+base = base.dropna(subset=['gdp_per_capita_usd','life_expectancy_years'])
+base = base.loc[base.gdp_per_capita_usd > 0].copy()
+base['log_gdp'] = np.log(base.gdp_per_capita_usd)
+model = sm.OLS(base.life_expectancy_years, sm.add_constant(base[['log_gdp']])).fit()
+base['predicted'] = model.predict(sm.add_constant(base[['log_gdp']]))
+base['gap'] = base.life_expectancy_years - base.predicted
+ranked = base.sort_values('gap', ascending=False)
+top = ranked.head(5).copy()
+print(f'Analytical sample: {len(base)}; R²: {model.rsquared:.3f}; doubling-income association: {model.params["log_gdp"] * np.log(2):.2f} years')
+print(model.summary())
+```
+
+# 3. Part I — Does wealth buy longer lives?
+
+```{python}
+#| label: fig-income-life
+#| fig-cap: "Life expectancy and nominal GDP per capita in 2022; line shows the fitted log-income benchmark."
+fig, ax = plt.subplots()
+ax.scatter(base.gdp_per_capita_usd, base.life_expectancy_years, alpha=.45, s=22)
+xx = np.geomspace(base.gdp_per_capita_usd.min(), base.gdp_per_capita_usd.max(), 300)
+ax.plot(xx, model.params['const'] + model.params['log_gdp'] * np.log(xx), linewidth=2)
+ax.scatter(top.gdp_per_capita_usd, top.life_expectancy_years, s=65)
+for row in top.itertuples():
+    ax.annotate(row.country_name, (row.gdp_per_capita_usd, row.life_expectancy_years), xytext=(4,5), textcoords='offset points', fontsize=8)
+ax.set(xscale='log', xlabel='GDP per capita (current US$, log scale)', ylabel='Life expectancy (years)')
+plt.show()
+```
+
+```{python}
+#| label: interpret-income
+print(f'In this 2022 sample, log income explains {model.rsquared:.1%} of cross-country variation in life expectancy (R² = {model.rsquared:.3f}).')
+print(f'The fitted association is {model.params["log_gdp"]*np.log(2):.2f} additional years for a doubling of nominal GDP per capita; this is not a causal effect.')
+```
+
+# 4. Part II — Which countries beat the odds?
+
+```{python}
+#| label: rank-top-five
+cols = ['country_name','life_expectancy_years','predicted','gap','gdp_per_capita_usd']
+display(top[cols].rename(columns={'country_name':'Country','life_expectancy_years':'Observed years',
+                                 'predicted':'Predicted years','gap':'Gap years',
+                                 'gdp_per_capita_usd':'GDP per capita (US$)'}).round(2))
+```
+
+```{python}
+#| label: fig-residual-bars
+#| fig-cap: "Five largest positive life-expectancy residuals in the supplied WDI-based 2022 sample."
+q = top.sort_values('gap')
+fig, ax = plt.subplots(figsize=(9,4))
+ax.barh(q.country_name, q.gap)
+ax.set(xlabel='Years above income-based prediction')
+plt.show()
+```
+
+```{python}
+#| label: fig-observed-predicted
+#| fig-cap: "Observed versus model-predicted life expectancy for the five largest positive residuals."
+q = top.sort_values('gap')
+fig, ax = plt.subplots(figsize=(9,4))
+y = np.arange(len(q))
+ax.scatter(q.predicted, y, label='Predicted', s=60)
+ax.scatter(q.life_expectancy_years, y, label='Observed', s=60)
+for i, row in enumerate(q.itertuples()):
+    ax.plot([row.predicted,row.life_expectancy_years],[i,i], color='grey')
+ax.set_yticks(y, q.country_name)
+ax.set(xlabel='Life expectancy (years)')
+ax.legend()
+plt.show()
+```
+
+## 4.1 Comparison with the preliminary README cases
+
+The preliminary README highlighted Cuba, Nicaragua, Bangladesh, Lebanon and Cabo Verde using a different income series. The table below shows their gaps under the **current** WDI-based model, where available; the preliminary ranks must not be carried forward without recalculation.
+
+```{python}
+#| label: preliminary-cases
+original_codes = ['CUB','NIC','BGD','LBN','CPV']
+comparison = base.loc[base.country_code.isin(original_codes), ['country_name','gap','life_expectancy_years','gdp_per_capita_usd']]
+display(comparison.sort_values('gap', ascending=False).round(2))
+```
+
+# 5. Part III — Beyond income
+
+The README prioritises healthcare spending, child mortality, sanitation, education and income inequality. The supplied panel contains secondary enrolment, but **does not contain healthcare expenditure, under-five mortality, sanitation access, Gini inequality, or average years of schooling**. Those explanations cannot be validated using these inputs. We instead examine available socioeconomic indicators as exploratory associations.
+
+```{python}
+#| label: exploratory-correlations
+variables = {
+    'secondary_enrollment_gross_pct':'Gross secondary enrolment',
+    'obesity_prevalence_pct':'Adult obesity prevalence',
+    'unemployment_rate_pct':'Unemployment',
+    'inflation_cpi_pct':'Inflation',
+    'voice_accountability_index':'Voice and accountability'
+}
+rows=[]
+for col, label in variables.items():
+    z = base[['gap',col]].replace([np.inf,-np.inf], np.nan).dropna()
+    r,p = pearsonr(z.gap, z[col]) if len(z)>2 else (np.nan,np.nan)
+    rows.append({'Indicator':label,'Countries':len(z),'Pearson r':r,'Exploratory p-value':p})
+display(pd.DataFrame(rows).round(3))
+```
+
+```{python}
+#| label: fig-education
+#| fig-cap: "Gross secondary enrolment versus longevity residual; descriptive association only."
+z = base.dropna(subset=['secondary_enrollment_gross_pct'])
+fig, ax = plt.subplots()
+ax.scatter(z.secondary_enrollment_gross_pct,z.gap,alpha=.45)
+ax.axhline(0,color='grey')
+ax.set(xlabel='Gross secondary enrolment (%)',ylabel='Observed minus predicted life expectancy (years)')
+plt.show()
+```
+
+```{python}
+#| label: fig-obesity
+#| fig-cap: "Adult obesity prevalence versus longevity residual; descriptive association only."
+z = base.dropna(subset=['obesity_prevalence_pct'])
+fig, ax = plt.subplots()
+ax.scatter(z.obesity_prevalence_pct,z.gap,alpha=.45)
+ax.axhline(0,color='grey')
+ax.set(xlabel='Adult obesity prevalence (%)',ylabel='Observed minus predicted life expectancy (years)')
+plt.show()
+```
+
+**Interpretation:** Correlations do not establish causal mechanisms. Sample sizes differ by indicator, p-values are unadjusted, and contemporaneous indicators can be confounded with income and other characteristics. Gross enrolment is not average years of schooling.
+
+# 6. Historical context
+
+```{python}
+#| label: fig-regional-trends
+#| fig-cap: "Unweighted mean life expectancy across countries in each WDI region; not population-weighted."
+regional = (panel.loc[panel.year.between(1960,2025)]
+            .groupby(['year','region'],as_index=False).life_expectancy_years.mean())
+fig, ax = plt.subplots(figsize=(10,5))
+for name, g in regional.groupby('region'):
+    ax.plot(g.year,g.life_expectancy_years,label=name)
+ax.set(xlabel='Year',ylabel='Unweighted mean life expectancy (years)')
+ax.legend(fontsize=8,bbox_to_anchor=(1,1),loc='upper left')
+plt.show()
+```
+
+```{python}
+#| label: fig-global-temperature
+#| fig-cap: "HadCRUT5 global annual temperature anomaly, shown for context only."
+fig, ax = plt.subplots(figsize=(9,4))
+ax.plot(climate['Time'],climate['Anomaly (deg C)'])
+ax.set(xlabel='Year',ylabel='Global temperature anomaly (°C)')
+plt.show()
+```
+
+The global temperature series has no cross-country variation within a year and is **not** included as a predictor in the 2022 country comparison.
+
+# 7. Robustness and limitations
+
+The ranking depends on nominal current-dollar GDP per capita, sample exclusions, the functional form of the regression, and the availability and quality of the underlying data. It should be checked against purchasing-power-adjusted income, Maddison GDP, robust regression and alternative model specifications. The original extraction's forward-filling is a particular limitation. Country-level observations are unweighted, so small and large countries have equal influence.
+
+```{python}
+#| label: residual-diagnostics
+fig, ax = plt.subplots()
+ax.scatter(base.predicted,base.gap,alpha=.45)
+ax.axhline(0,color='grey')
+ax.set(xlabel='Fitted life expectancy (years)',ylabel='Residual (years)',title='Baseline model residual diagnostics')
+plt.show()
+```
+
+# 8. Conclusion
+
+The 2022 data show a substantial relationship between national income and longevity, but income does not account for every country's outcome. Countries above the fitted income benchmark are valuable cases for further investigation, not evidence that particular policies caused longer lives. The next research step is to acquire comparable healthcare expenditure, sanitation, child survival and schooling data and to validate whether the headline cases remain robust under the original README's Maddison income definition.
+
+# 9. Data provenance and reproducibility
+
+**Inputs:** World Bank WDI/WHO GHO merged country-year panel (`country_panel_wdi_who(1).csv`); HadCRUT5 annual global anomaly (`HadCRUT.5.0.2.0.analysis.summary_series.global.annual(1).csv`); project README. The source extraction dates and metadata should be documented before academic submission. No healthcare expenditure or inequality findings are inferred from absent variables.
+
+**Render:** Run `quarto render final_report.qmd --to html` in a Python environment with `pandas`, `numpy`, `matplotlib`, `scipy`, `statsmodels`, `ipython`, `jupyter` and Quarto installed. The HTML output includes expandable code for **every analysis section**.
+
