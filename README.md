@@ -1,192 +1,331 @@
+
 # Beating the Odds: Countries That Live Longer Than Their Income Predicts
 
-**Course:** Visual Communication and Data Storytelling
-**Program:** MSc Data Science and Society – Business (MDSSB)
-**University:** Constructor University Bremen
-**Data Story Keyword:** LifeExpectancy
-**Team Members:** Shaleen Debeila, Rebeccah Kapsekei, Lutendo Mulea, Morne Magerman, Limpo Shawa
+**Course:** Visual Communication and Data Storytelling  
+**Program:** MSc Data Science for Society and Business (MDSSB)  
+**University:** Constructor University Bremen  
+**Team:** Shaleen Debeila, Rebeccah Kapsekei, Lutendo Mulea, Morné Magerman, Limpo Shawa
 
-## Project Overview
+## 1. Project Overview
 
-Does a country's wealth determine how long its people live?
+**Does a country need to be wealthy for its people to live longer?**
 
-Wealthier countries generally enjoy higher life expectancy, but the relationship is not straightforward. Some countries achieve significantly better health outcomes than their economic resources would suggest.
+Income and life expectancy are closely related across countries, but income alone cannot describe every country's experience. Our project investigates how life expectancy varies with GDP per capita in 2022, identifies countries whose life expectancy is higher than an income-based statistical benchmark, and explores whether healthcare expenditure per person is associated with these differences.
 
-Our project investigates these exceptions using country-level data from 2022. We examine the relationship between life expectancy, GDP per capita, healthcare expenditure, and income inequality, while considering additional socioeconomic factors that may help explain differences in health outcomes.
+In our title, **“predicts” means a fitted statistical estimate, not a forecast of the future.** We use a regression model to estimate the life expectancy associated with each country's income level. A country whose observed life expectancy exceeds that estimate has a **positive gap (residual)**. Such a gap makes the country worth investigating; it does not establish that its healthcare system or policies are better.
 
-Rather than simply showing that richer countries tend to live longer, our data story focuses on five countries that beat the odds and explores what makes their performance interesting.
+### Research Question
 
-## Research Question
+**Why do some countries live longer than their income-based benchmark suggests, and is healthcare expenditure associated with those differences?**
 
-Why do some countries achieve higher life expectancy than their income levels would predict, and what factors might help explain their better-than-expected outcomes?
+We approach this through three questions:
 
-Our analysis focuses on three supporting questions:
+1. How strongly is GDP per capita associated with life expectancy across countries in 2022?
+2. Which countries have the largest positive gaps between observed and model-estimated life expectancy?
+3. Among countries with available data, is healthcare expenditure per capita associated with these gaps?
 
-1. How strongly is national income associated with life expectancy?
-2. Which five countries achieve the highest life expectancy relative to their income, and how does their healthcare spending compare?
-3. What additional socioeconomic factors might help explain differences in life expectancy?
+## 2. Audience and Communication Goal
 
-## Drafting: Audience, Insights, Summary
+The story is intended for **outsiders**: readers without specialist training in statistics or global health. We will use plain-language explanations, annotated figures, and a limited number of indicators rather than technical model output alone.
 
-### Target Audience and Storytelling Approach
+### Audience Personas
 
-**Audience perspective:** Our story takes an outsider perspective, targeting people who are interested in global health and development but do not necessarily have technical backgrounds.
-
-**Target data literacy:** Basic to intermediate.
-
-**Presentation setting:** An accessible public educational talk or online article about global health, development, and inequality.
-
-**Communication goal:** To communicate complex global health patterns through simple visualizations, relatable country comparisons, and clear explanations.
-
-| Persona | Background | Interest and personal connection | Central question |
-|---|---|---|---|
-| **Sarah (primary)** | 32-year-old secondary school teacher in Nairobi, Kenya | Wants to understand global health inequalities and share meaningful examples with her students. | "Does a country need to be rich for its people to live longer?" |
-| **David** | 40-year-old public health policy officer in Johannesburg, South Africa | Interested in identifying countries that achieve strong health outcomes despite limited economic resources. | "Which countries get good results on a small budget, and is spending really the reason?" |
-| **Emma** | 24-year-old international relations student in Bremen, Germany | Interested in understanding how global economic inequality relates to health and living conditions. | "Is global inequality in health just a story about money?" |
-
-**Primary persona: Sarah.** Sarah is an educated, curious teacher who follows discussions about global development and inequality. She understands basic charts but is not familiar with advanced statistical methods.
-
-To make our story meaningful to Sarah, we will:
-- Use accessible language rather than statistical jargon.
-- Focus on one key message per visualization.
-- Highlight memorable country comparisons.
-- Explain unfamiliar concepts such as GDP per capita.
-- Connect global findings to questions relevant to countries such as Kenya.
-
-**Path to value (role of the report for the audience):**
-- Sarah can reuse one or two charts and country examples in class discussions.
-- David can use the comparison of spending and outcomes as input when thinking about what other countries can teach.
-- Emma can build a clearer picture of how wealth, health, and inequality relate.
-
-### Key Insights
-
-Our preliminary analysis and research have identified the following insights:
-
-- **Insight 1: Wealth matters, but it does not tell the whole story.** National income is strongly associated with life expectancy. Our preliminary analysis suggests that income accounts for approximately three-quarters of the observed cross-country variation in life expectancy in 2022 (see Data and Methodology for how this is calculated).
-- **Insight 2: Five countries achieve longer lives than their income predicts.** Cuba, Nicaragua, Bangladesh, Lebanon, and Cape Verde appear to achieve life expectancy approximately 5–7 years above income-based expectations.
-- **Insight 3: Healthcare spending does not provide a complete explanation.** The five countries have very different healthcare spending levels relative to countries at similar incomes. Preliminary comparisons suggest that Bangladesh spends about half as much as its income peers, while Cuba spends nearly five times as much.
-- **Insight 4: Social and environmental conditions may matter.** Child survival, sanitation, and education are the factors we will test with data. Healthcare access is also a candidate, but we have not yet identified a suitable dataset. *(Hypothesis, still to be tested.)*
-- **Insight 5: Income inequality alone may not explain the differences.** Preliminary analysis suggests a very weak relationship between the Gini index and countries' deviations from income-based life expectancy expectations. However, missing data (only two of the five countries have a recent value) limits the strength of this conclusion.
-- **Insight 6: Global life expectancy has improved, but regional inequalities persist.** Life expectancy has increased substantially across world regions since 1950. The gap between Europe and Africa narrowed from 24.8 years in 1950 to 15.3 years in 2023, but remains considerable.
-
-**Prioritized main insight:**
-Five countries achieve life expectancy approximately 5–7 years above what their income would predict, despite substantial differences in healthcare spending.
-
-This finding challenges the idea that national wealth or healthcare expenditure alone determines how long people live. Our story will explore these differences and investigate possible explanations without treating statistical associations as proof of causation.
-
-### Country-Specific Analysis
-
-Our data story focuses on five countries that appear to achieve higher life expectancy than their income would predict, based on our preliminary 2022 analysis. They are the five countries with the largest positive gaps between actual and expected life expectancy after the exclusions described in Data and Methodology.
-
-| Country | Gap vs. income-based expectation (years, preliminary) | Health spending vs. income peers (preliminary) | Focus of investigation |
-|---|---|---|---|
-| **Cuba** | about +6.6 | about 4.8 times higher | Investigate how healthcare expenditure, child mortality, sanitation, and education relate to its better-than-expected life expectancy. |
-| **Nicaragua** | about +5.5 | about 1.6 times higher | Explore which socioeconomic conditions may be associated with its relatively strong life expectancy outcomes. |
-| **Bangladesh** | about +5.5 | about half | Examine how the country achieves better-than-expected life expectancy despite relatively limited healthcare expenditure. |
-| **Lebanon** | about +5.4 | about 0.8 times | Compare its outcomes with countries at a similar income level, and check whether spending, child survival, or sanitation set it apart. |
-| **Cape Verde (Cabo Verde)** | about +5.2 | about the same | Explore the relationship between healthcare spending, education, sanitation, and life expectancy in a small island country. |
-
-Despite a shared gap of roughly 5–7 years, the five countries' healthcare spending differs considerably, suggesting that spending alone may not fully account for their outcomes.
-
-**Factors to investigate.** We will test three measurable indicators against the gap between actual and income-expected life expectancy, across all countries with data (about 160), and use the five countries as illustrations. Five data points alone cannot show an association.
-- **Child mortality:** Is lower child mortality, relative to income, associated with being above the income-based expectation? Child deaths lower life expectancy directly, so we treat this as part of the explanation and not as a fully independent factor.
-- **Sanitation:** Is better access to sanitation, relative to income, associated with a larger positive gap?
-- **Education:** Is longer average schooling, relative to income, associated with a larger positive gap? (Latest available year, which is earlier than 2022.)
-
-All results will be described as associations, not causal explanations.
-
-**Intended audience takeaway.** For Sarah, our primary persona, the central message is that countries with different economic resources and healthcare spending patterns can still achieve relatively strong life expectancy outcomes. By comparing these five countries, we aim to show why understanding longevity requires looking beyond national income alone.
-
-### One-Sentence Story Summary
-
-Five countries live approximately 5–7 years longer than their income would predict. Healthcare spending explains only part of this difference, suggesting that other factors may also play an important role.
-
-### Narrative Abstract
-
-Why do people in some countries live longer than those in countries with similar economic resources? Using 2022 data from Our World in Data covering approximately 165 countries, our project investigates the relationship between national income and life expectancy, revealing that wealth explains much, but not everything, about differences in longevity. Preliminary findings suggest that five countries, Cuba, Nicaragua, Bangladesh, Lebanon, and Cape Verde, achieve life expectancy approximately five to seven years above income-based expectations. Interestingly, their healthcare spending patterns differ substantially, suggesting that expenditure alone may not fully account for these outcomes. We therefore explore whether other socioeconomic conditions, including child survival, sanitation, education, and inequality, are associated with these differences. Through accessible visualizations and country comparisons, our story aims to help a general audience understand why economic prosperity does not always translate into the same health outcomes. Ultimately, we highlight how countries performing above expectations may provide valuable starting points for understanding opportunities to improve population health, while recognizing that observed relationships do not establish causation.
-
-## Data and Methodology
-
-### Data Sources
-
-Our analysis uses publicly available country-level datasets, primarily obtained through Our World in Data.
-
-| Indicator | Source | Purpose |
+| Persona | Background and interests | What the story should offer |
 |---|---|---|
-| Life expectancy at birth | UN World Population Prospects via Our World in Data | Measure population longevity |
-| GDP per capita | Maddison Project Database 2023 via Our World in Data | Measure national economic resources |
-| Healthcare expenditure per capita | WHO / World Bank via Our World in Data | Compare health spending |
-| Income inequality (Gini index) | World Bank Poverty and Inequality Platform | Explore income distribution |
-| Child mortality, sanitation, years of schooling | Our World in Data (to be downloaded; latest available year, schooling data is older than 2022) | Investigate possible explanations |
+| **Sarah (primary)** | A 32-year-old secondary-school teacher in Nairobi, Kenya, interested in accessible examples of global development | Clear country comparisons and visuals she can use to start classroom discussions about income and health |
+| **David** | A 40-year-old public health policy officer in Johannesburg, South Africa | Examples of countries that exceed an income-based benchmark and questions worth investigating further |
+| **Emma** | A 24-year-old international relations student in Bremen, Germany | An accessible explanation of global inequalities and why income alone cannot fully describe life expectancy |
 
-**Main analysis year:** 2022. GDP per capita from the Maddison Project ends in 2022, so 2022 is the latest year with matching data.
+### Primary Persona and Setting
 
-**Coverage:** 165 countries have both life expectancy and GDP per capita in 2022; 161 are used to fit the trend (see exclusions below). Coverage is lower for other variables (about 160 for health spending and about 125 for the Gini index).
+Sarah is our primary persona. She encounters the story through an online article or classroom resource and wants to explain why wealthier countries often have higher life expectancy while some countries differ from that general pattern.
 
-### Analytical Approach
+The story should help her understand the central comparison without needing to interpret regression coefficients or statistical tests.
 
-1. Examine the relationship between GDP per capita and life expectancy.
-2. Estimate expected life expectancy from national income. "Expected" is the value on a trend line of life expectancy against the logarithm of GDP per capita, and a country's gap is its actual life expectancy minus the expected value.
-3. Identify countries performing above or below those expectations. The five countries are those with the largest positive gaps.
-4. Compare healthcare expenditure among the selected countries, relative to what countries at similar income levels spend.
-5. Test whether child mortality, sanitation, and years of schooling are associated with the gap between actual and expected life expectancy across all countries with data, using the five countries as illustrations.
-6. Translate the findings into clear, accessible visualizations.
+### Path to Value
 
-**Exclusions:** Central African Republic, North Korea, Syria, and Palestine are excluded from the trend and from the ranking because conflict or limited data makes their life expectancy and income estimates highly uncertain. With these included, income explains about two-thirds of the variation instead of about three-quarters, and North Korea, Syria, and Palestine would appear among the largest gaps. These countries are shown separately in the charts.
+The reader begins with a familiar question: *Does more money mean longer lives?*
 
-All findings will be interpreted as associations rather than causal relationships.
+The first visualization establishes the relationship between income and life expectancy. The second identifies countries whose observed outcomes exceed the income-based benchmark. The third explores whether healthcare expenditure is associated with those differences.
 
-## Data Story Narrative
+By the end, Sarah should be able to explain what the data shows, recognize that statistical associations are not proof of causation, and use the examples to encourage further discussion.
 
-Our story follows a three-part structure.
+## 3. Data Sources and Indicators
 
-**Part 1: The Big Picture. Does wealth buy longer lives?** We introduce the global relationship between GDP per capita and life expectancy and show why national income is an important predictor of population health.
+Our project focuses on **2022 country-level observations** from the World Bank's [World Development Indicators (WDI)](https://databank.worldbank.org/source/world-development-indicators).
 
-**Part 2: The Surprise. Five countries beating the odds.** We highlight countries that achieve longer life expectancy than expected based on income and compare them with countries at similar economic levels.
+We use three indicators:
 
-**Part 3: Beyond Wealth. What else might matter?** We examine healthcare spending and potential socioeconomic explanations, exploring what the differences might mean for understanding global health inequalities.
+| Indicator | World Bank code | Unit | Role |
+|---|---|---|---|
+| Life expectancy at birth | `SP.DYN.LE00.IN` | Years | Main outcome |
+| GDP per capita | `NY.GDP.PCAP.CD` | Current US dollars per person | Income benchmark |
+| Current health expenditure per capita | `SH.XPD.CHEX.PC.CD` | Current US dollars per person | Exploratory comparison |
 
-**Closing message:** National wealth matters, but it is not the complete story of how long people live.
+Healthcare expenditure data published through WDI draws on health-sector statistical sources, including WHO.
 
-## Planned Visualizations
+### Data Retrieval
 
-- **Global income–life expectancy scatterplot:** illustrating the overall relationship and highlighting the countries that outperform expectations.
-- **Country comparison chart:** showing observed versus income-predicted life expectancy.
-- **Healthcare spending comparison:** exploring expenditure relative to income peers among the selected countries.
-- **Socioeconomic factors visualization:** examining additional indicators where data is available.
-- **Historical regional comparison:** providing context on changes in life expectancy and persistent global inequalities.
+The latest shared Python/Quarto analysis draft is designed to retrieve 2022 observations directly from the World Bank API.
 
-First drafts exist for the scatterplot (with and without the five countries highlighted), the healthcare spending comparison, the regional comparison since 1950, and the Gini index. Visualizations will prioritize readability, clear labels, accessible explanations, and meaningful comparisons.
+An earlier version used a merged country-level CSV panel, which may have included values carried forward from previous years. We will not treat those earlier outputs as verified 2022 results.
 
-## Repository Structure and Deliverables
+Before reporting findings, we must validate the API retrieval, country classifications, missing observations, and analytical sample.
 
-The project is developed using R, ggplot2, Quarto, and GitHub.
+## 4. Methodology
 
-| File or folder | Description |
+Our analysis follows five main steps.
+
+### Step 1: Retrieve and Validate the Data
+
+We obtain 2022 observations for the three selected indicators.
+
+We check:
+
+- Whether observations correspond to 2022.
+- Whether regional aggregates and other non-country entries have been excluded.
+- Whether country identifiers are unique and consistent.
+- Which indicators have missing observations.
+- Whether the retrieved values are suitable for comparison.
+
+We will not replace missing 2022 values with observations from earlier years.
+
+### Step 2: Prepare the Analytical Sample
+
+The primary regression will include eligible countries with valid 2022 life expectancy and positive GDP per capita.
+
+We will document the final sample size and any exclusions.
+
+Countries will not be excluded merely because their observations are unusual. Any additional exclusions must be justified using transparent data-quality criteria.
+
+### Step 3: Estimate the Income-Based Benchmark
+
+We use ordinary least squares (OLS) regression to estimate the relationship between life expectancy and the natural logarithm of GDP per capita.
+
+The model is:
+
+\[
+\text{Life Expectancy}_i = \beta_0 + \beta_1 \ln(\text{GDP per capita}_i) + \varepsilon_i
+\]
+
+The fitted model provides an income-based statistical benchmark for each country.
+
+We will report the number of countries included, the estimated relationship, and the model's explanatory power.
+
+This is a descriptive cross-country model, not a causal estimate.
+
+### Step 4: Calculate Life-Expectancy Gaps
+
+For each country, we calculate:
+
+\[
+\text{Gap}_i = \text{Observed Life Expectancy}_i - \text{Predicted Life Expectancy}_i
+\]
+
+A **positive gap** means the country's observed life expectancy is higher than the fitted income benchmark.
+
+A **negative gap** means its observed life expectancy is lower than that benchmark.
+
+We will rank countries by these gaps and identify cases worth investigating.
+
+### Step 5: Explore Healthcare Expenditure
+
+We compare healthcare expenditure per capita with the residuals from the same income-based model.
+
+This comparison will use countries with valid healthcare expenditure observations and calculated life-expectancy gaps.
+
+We will report:
+
+- The number of countries included.
+- The direction and strength of the association.
+- A visualization with a trend line.
+- Whether influential observations appear to affect the pattern.
+
+Healthcare expenditure is not a direct measure of healthcare quality, access, or efficiency. An association between spending and residuals would not establish that healthcare expenditure caused longer life expectancy.
+
+## 5. Preliminary Country Examples
+
+Our initial work highlighted five countries:
+
+- **Cuba**
+- **Nicaragua**
+- **Bangladesh**
+- **Lebanon**
+- **Cabo Verde (Cape Verde)**
+
+These are **preliminary candidate cases**, not confirmed members of the five countries with the largest positive residuals in the final model.
+
+The original examples were identified using preliminary data and income measures. Their positions must be recalculated using the validated 2022 World Bank dataset.
+
+If a proposed country lacks the necessary data or does not exceed the final benchmark, we will report that transparently rather than forcing it into the results.
+
+## 6. Candidate Insights
+
+The following are **questions and possible insights to investigate**, not verified findings.
+
+1. **Income and longevity:** Countries with higher GDP per capita may generally have higher life expectancy, although the relationship is not expected to be identical across all income levels.
+
+2. **Variation among countries:** Countries with similar income levels may have noticeably different life expectancy outcomes.
+
+3. **Countries above the benchmark:** Some countries may achieve life expectancy above the level estimated from their income alone.
+
+4. **Differences in healthcare spending:** Countries above the benchmark may differ in how much they spend per person on healthcare.
+
+5. **Healthcare expenditure and residuals:** The association between healthcare spending and better-than-predicted life expectancy may be positive, weak, negative, or influenced by particular observations. The direction must be established empirically.
+
+6. **Limits of a single economic indicator:** GDP per capita may provide a useful benchmark without fully describing differences in national health outcomes.
+
+We will prioritize insights supported by the validated analysis and remove or revise any that are not supported.
+
+## 7. One-Sentence Story Summary
+
+**National income provides an important benchmark for life expectancy, but differences between observed and predicted outcomes invite further investigation into whether healthcare expenditure is associated with those gaps.**
+
+## 8. Narrative Abstract
+
+Does a country need to be wealthy for its people to live longer? Across the world, national income and life expectancy are closely connected, yet countries with similar economic resources do not always experience the same health outcomes. Our data story investigates this relationship using 2022 country-level indicators from the World Bank. We first estimate an income-based benchmark for life expectancy and then identify countries whose observed outcomes are higher than the model suggests. Next, we examine whether healthcare expenditure per person is associated with these differences, while acknowledging that spending does not directly measure healthcare quality or access. Through three accessible visualizations, we aim to help readers understand the broad relationship, recognize countries that differ from it, and consider possible explanations. The story does not claim that income or healthcare expenditure causes longer lives; instead, it shows how descriptive data analysis can reveal patterns, exceptions, and questions that deserve further investigation.
+
+## 9. The Three-Part Data Story
+
+Our story is organized around three distinct questions and visualizations.
+
+### Part I: Does Income Relate to Longevity?
+
+**Planned visualization:** A scatterplot of GDP per capita against life expectancy for 2022.
+
+The chart will use a logarithmic income axis and show the fitted regression benchmark.
+
+**Purpose:** Introduce the overall relationship and make differences between countries visible.
+
+### Part II: Which Countries Exceed the Benchmark?
+
+**Planned visualization:** A ranked horizontal bar chart showing countries with the largest positive life-expectancy residuals.
+
+**Purpose:** Identify countries whose observed life expectancy exceeds the income-based estimate and show the size of each gap.
+
+We will distinguish the final ranked countries from the five cases originally proposed during the project pitch.
+
+### Part III: Is Healthcare Expenditure Associated with the Gap?
+
+**Planned visualization:** A scatterplot of healthcare expenditure per capita against life-expectancy residuals, including a trend line.
+
+**Purpose:** Explore whether countries spending more per person on healthcare tend to have larger or smaller residuals.
+
+The chart will identify the sample size, display clear units, and explain important limitations.
+
+These are planned visualizations. Their final interpretation will depend on the validated results.
+
+## 10. Team Members and Responsibilities
+
+| Team member | Proposed responsibility |
 |---|---|
-| `README.md` | Project overview, audience, insights, and narrative plan |
-| `index.qmd` | News-style written data story |
-| `presentation.qmd` | Quarto RevealJS narrative presentation |
-| `data/` | Datasets used in the analysis |
-| `_quarto.yml` | Website configuration |
+| Shaleen Debeila | Data preparation, data coverage, and missing-value checks |
+| Rebeccah Kapsekei | README documentation, coordination, and integration |
+| Lutendo Mulea | Healthcare expenditure analysis and interpretation |
+| Morné Magerman | Python regression, residual analysis, and Quarto implementation |
+| Limpo Shawa | Visual design, communication, and storytelling |
 
-**Final deliverables:**
-- A reproducible Quarto HTML report presented in news-article form.
-- A narrative slide deck using Quarto RevealJS.
-- Supporting datasets, analytical code, and visualizations.
+Responsibilities are proposed and subject to group confirmation.
 
-## Project Status and Next Steps
+All team members contribute to reviewing the analysis, discussing findings, and preparing the final presentation.
 
-**Current stage:** Data story development and refinement.
+## 11. Repository and Reproducibility
 
-Our next steps are to:
-1. Recreate the preliminary analysis and charts in R so the report is reproducible.
-2. Confirm the final main insight using the analysis.
-3. Test child mortality, sanitation, and years of schooling against the gap between actual and expected life expectancy, and report which factors show a clear association.
-4. Develop the main visualizations.
-5. Draft the news-style report and narrative presentation.
-6. Review the story for clarity and accessibility to nontechnical audiences.
+The project uses **Python** for statistical analysis and visualization, and **Quarto** for reproducible reporting.
 
-## Key Takeaway
+### Repository Files
 
-Living in a wealthy country generally increases the chances of a longer life, but some countries achieve surprisingly good health outcomes with fewer economic resources. Understanding these differences is the central goal of our data story.
+Important files currently visible in the repository include:
+
+- `README.md` — project documentation.
+- `Report.qmd` — Quarto report.
+- `presentation.qmd` — presentation source.
+- `index.qmd` — Quarto website entry point.
+- `data/country_panel_wdi_who.csv` — existing merged data panel.
+- `data/compile_indicatorsdata.R` — existing data preparation script.
+- `_quarto.yml` — Quarto project configuration.
+
+The presence of older data preparation files does not mean they are necessarily used by the latest Python analysis draft.
+
+### Software Requirements
+
+- [Python](https://www.python.org/)
+- [Quarto](https://quarto.org/docs/get-started/)
+- Jupyter
+- `pandas`
+- `numpy`
+- `matplotlib`
+- `requests`
+- `scipy`
+- `statsmodels`
+
+Install the Python dependencies:
+
+```bash
+python -m pip install pandas numpy matplotlib requests scipy statsmodels jupyter
+```
+
+### Render the Report
+
+From the repository's root directory, run:
+
+```bash
+quarto render Report.qmd --to html
+```
+
+**Important:** `Report.qmd` is the filename currently visible in the repository. The latest API-based draft must be incorporated into the appropriate report file and successfully tested before this command can be treated as a verified reproduction procedure.
+
+### Reproducibility Checks
+
+Before final submission, we will:
+
+1. Validate the World Bank API retrieval for 2022.
+2. Exclude regional aggregates using a documented classification rule.
+3. Check country identifiers, duplicates, and missing observations.
+4. Verify the regression sample and model results.
+5. Recalculate country residuals and rankings.
+6. Check the healthcare comparison sample and association.
+7. Assess influential observations and justified exclusions.
+8. Save a validated data extract and record the retrieval date.
+9. Confirm that the Quarto report renders successfully.
+
+## 12. Limitations
+
+Our analysis has several limitations.
+
+- **Single-year comparison:** The 2022 cross-section cannot explain how changes over time affect life expectancy.
+- **Observational data:** Statistical associations do not establish causation.
+- **Income measurement:** GDP per capita in current US dollars is affected by exchange rates and differences in local prices.
+- **Healthcare expenditure:** Spending per capita does not directly measure healthcare quality, access, efficiency, or the distribution of services.
+- **Missing observations:** Not every country has complete data for all three indicators.
+- **Model dependence:** Residuals and rankings depend on the analytical sample and regression specification.
+- **Influential observations:** Particular countries may affect the estimated healthcare expenditure association.
+- **Unobserved factors:** Education, living conditions, public health measures, demographics, and other factors may contribute to differences in life expectancy but are not directly analyzed in the main model.
+
+These limitations are important when interpreting countries that exceed the income-based benchmark.
+
+## 13. Current Project Status
+
+The project direction and core indicators have been selected.
+
+The latest Python/Quarto draft is intended to retrieve 2022 observations directly from the World Bank API, estimate the income-based regression, calculate residuals, and explore healthcare expenditure.
+
+However, the final analysis has not yet been validated.
+
+### Results Still to Confirm
+
+- The final number of eligible countries in the regression.
+- The regression coefficients and model fit.
+- The countries with the largest positive life-expectancy gaps.
+- The availability of data for the five preliminary country examples.
+- The number of countries in the healthcare expenditure comparison.
+- The direction and strength of the healthcare expenditure association.
+- The sensitivity of results to influential observations and documented exclusions.
+
+Earlier preliminary estimates of life-expectancy gaps, model fit, and healthcare spending ratios will not be presented as final findings unless they are reproduced using the validated analysis.
+
+## 14. Central Message
+
+**National income matters, but it does not tell the whole story of how long people live.**
+
+By comparing observed life expectancy with an income-based benchmark and exploring healthcare expenditure, our project aims to identify meaningful patterns while remaining clear about what the data can and cannot establish.
