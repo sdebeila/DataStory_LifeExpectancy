@@ -1,14 +1,14 @@
 # Storyboard: Beating the Odds
 
-Keyword: **LifeExpectancy**. Milestone 4, following Jan's Week 10 steps: Phase A (story points), Phase B (Aha moment, beginning, rising insights, conclusion). The main purpose is to build the story, not the exact visualisations, so the visuals are rough drafts from `index.qmd` and the scripts in this repo.
+Keyword: **LifeExpectancy**. Milestone 4, following the Week 10 storyboarding method (Dykes 2019): Phase A (story points), Phase B (Aha moment, beginning, rising insights, conclusion). The main purpose is to build the story, not the exact visualisations, so the visuals are rough drafts from `index.qmd` and the scripts in this repo.
 
-The storyboard combines the team's ten-card version with the teammate's eight-card version (kept in full in `PLANNING_NOTES.md`). Their "tension" card ("the trend does not fit every country") is now part of the Aha card.
+The storyboard combines two team drafts, a ten-card and an eight-card version (the second is kept in full in `PLANNING_NOTES.md`). The "tension" card ("the trend does not fit every country") is now part of the Aha card.
 
 **Narrative arc:** hook, global setting, expected income pattern, surprising exceptions (Aha), how rare and how fast, investigation of possible explanations, cautious conclusion.
 
 ## Phase A: story point cards
 
-Jan's range is 6 to 10 cards. Each card is a story point (said in words) with a visual anchor.
+The method calls for 6 to 10 cards. Each card is a story point (said in words) with a visual anchor.
 
 | # | Slide title / story point | Visual | Role in the arc | Presenter (proposal) |
 |---|---|---|---|---|
@@ -23,7 +23,7 @@ Jan's range is 6 to 10 cards. Each card is a story point (said in words) with a 
 | 9 | **Inequality and schooling add little.** The data also has gaps. | Short text, optional small chart (`visual5_gini_vs_gap.png`) | Investigation (short) | Limpo |
 | 10 | **Income matters, but the story is more complex.** The exceptions are starting points for questions, not proof of what works. | Takeaway summary and limitations | Conclusion and next steps | Limpo |
 
-Presenters are proposals. Jan expects every team member to present at least one story point.
+Presenters are proposals; every team member presents at least one story point in the final presentation.
 
 ## Phase B: the four steps
 
