@@ -1,23 +1,26 @@
 project:
   type: website
+  render:
+    - index.qmd
+    - presentation.qmd
 
 website:
-  title: "Visual Communication and Data Storytelling Playground"
+  title: "Beating the Odds"
   navbar:
     left:
-      - index.qmd
-      - bibliography-example.qmd
+      - text: "Report"
+        href: index.qmd
       - text: "Presentation"
         href: presentation.qmd
-      - scrollytelling.qmd
 
-format: 
+format:
   html:
-    toc: true                   # This creates the table of context menu
-    toc-depth: 2                # Increase if you want to have subsections in the table of context menu
-    number-sections: true
+    toc: true                   # table of contents menu
+    toc-depth: 2
+    number-sections: false      # our headings are numbered by hand
     code-fold: true
     code-tools: true
+    theme: cosmo
   revealjs:
     slide-number: true
     smaller: true
