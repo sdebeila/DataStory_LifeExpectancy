@@ -26,11 +26,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.ticker import FuncFormatter
+from matplotlib.ticker import FuncFormatter, NullFormatter
 
 plt.rcParams.update({"font.size": 11, "axes.spines.top": False, "axes.spines.right": False})
 
 DATA = Path("data")
+if not DATA.is_dir():
+    raise FileNotFoundError("Missing data/ folder. Put the project CSV files in data/ beside this QMD before rendering.")
 YEAR = 2022
 N_TOP = 5
 
@@ -48,6 +50,16 @@ def read_owid(file, value_name, countries_only=True):
     if countries_only:
         df = df[df["code"].notna() & ~df["code"].astype(str).str.startswith("OWID")]
     return df
+
+
+def label_point(ax, text, xy, offset, colour=ORANGE, size=10):
+    """Label a point with a short leader line that starts at the edge of the text, not through it.
+    offset = (dx, dy) in points from the point to the centre of the label."""
+    dx, dy = offset
+    ax.annotate(text, xy, xytext=offset, textcoords="offset points", ha="center",
+                va="bottom" if dy >= 0 else "top", color=colour, fontweight="bold", fontsize=size,
+                arrowprops=dict(arrowstyle="-", color=colour, lw=1,
+                                relpos=(0.5, 0.0) if dy >= 0 else (0.5, 1.0), shrinkA=2, shrinkB=4))
 
 
 def md_table(df):
@@ -132,6 +144,11 @@ sc = fit.merge(sch[sch["year"] == SCHOOL_YEAR][["country", "sch"]], on="country"
 sc["sch_diff"] = difference_from_income(sc, "sch")
 corr_sch = np.corrcoef(sc["gap"], sc["sch_diff"])[0, 1]
 
+# Sanity checks: stop early if the fitted sample cannot support the story.
+assert len(fit) >= N_TOP, "Not enough countries for a top-five ranking."
+assert fit["country"].is_unique, "Duplicate countries in fitted 2022 sample."
+assert np.isfinite(fit[["life_exp", "gdp_pc", "expected", "gap"]].to_numpy()).all(), "Non-finite model values."
+
 five = top["country"].tolist()
 five_text = ", ".join(five[:-1]) + " and " + five[-1]
 gap_lo, gap_hi = top["gap"].min(), top["gap"].max()
@@ -189,6 +206,39 @@ print(f"In 1950, people in Europe lived about {gap1950:.0f} years longer than pe
       f"By 2023 that gap had narrowed to about {gap2023:.0f} years, but it remains large.")
 ```
 
+## At the same income, lives can still differ a lot
+
+Before we look for patterns, a puzzle. Take countries with almost the same income, between 4,000 and 6,000 international dollars per person.
+
+```{python}
+#| label: fig-same-income
+#| fig-cap: "Life expectancy of countries with a GDP per capita of 4,000 to 6,000 international dollars, 2022. Each dot is one country."
+band = fit[(fit["gdp_pc"] >= 4000) & (fit["gdp_pc"] <= 6000)]
+lo, hi = band["life_exp"].min(), band["life_exp"].max()
+fig, ax = plt.subplots(figsize=(8.5, 5.2))
+others = band[band["country"] != "Nicaragua"]
+ax.scatter(others["gdp_pc"], others["life_exp"], s=80, color=GREY, edgecolor="white", zorder=2)
+nic = band[band["country"] == "Nicaragua"].iloc[0]
+ax.scatter(nic["gdp_pc"], nic["life_exp"], s=140, color=ORANGE, edgecolor="#222", zorder=3)
+ax.annotate(f"Nicaragua ({nic['life_exp']:.1f})", (nic["gdp_pc"], nic["life_exp"]), xytext=(-90, 6),
+            textcoords="offset points", ha="center", color=ORANGE, fontweight="bold", fontsize=11)
+ax.annotate("", xy=(6150, lo), xytext=(6150, hi), arrowprops=dict(arrowstyle="<->", color="#444", lw=1.3))
+ax.text(6230, (lo + hi) / 2, f"About {hi - lo:.0f} years\napart at almost the\nsame income", va="center", fontsize=11, color="#444")
+ax.set_xlim(3800, 7200)
+ax.set_ylim(50, 80)
+ax.set_xlabel("GDP per capita (international dollars, 2011 prices)")
+ax.set_ylabel("Life expectancy at birth (years)")
+ax.grid(axis="y", ls="--", alpha=0.3)
+plt.show()
+```
+
+```{python}
+#| label: same-income-text
+#| output: asis
+print(f"Among these {len(band)} countries, life expectancy ranges from {lo:.0f} to {hi:.0f} years. "
+      f"Nicaragua is at the top of the group. Income clearly matters, but it cannot be the whole story.")
+```
+
 Does money explain the differences? To find out, we compare each country's life expectancy with its income per person in 2022. Income is shown on a logarithmic scale, which means each step to the right is a tenfold increase.
 
 ```{python}
@@ -223,24 +273,26 @@ We call the distance between a country's actual life expectancy and the value ex
 ```{python}
 #| label: fig-top
 #| fig-cap: "The five countries furthest above the income trend, 2022. Labels show the gap in years."
-offsets = {"Cuba": (-70, 28), "Lebanon": (30, 32), "Cape Verde": (40, -40),
-           "Nicaragua": (-95, 22), "Bangladesh": (-100, -30)}
+offsets = {"Cuba": (-60, 34), "Lebanon": (45, 40), "Cape Verde": (70, -42),
+           "Nicaragua": (-110, 22), "Bangladesh": (-90, -40)}
 fig, ax = plt.subplots(figsize=(9, 6))
 ax.scatter(fit["gdp_pc"], fit["life_exp"], s=28, color=GREY, alpha=0.85, lw=0)
 ax.scatter(excluded_shown["gdp_pc"], excluded_shown["life_exp"], s=34, facecolors="none", edgecolors="#9a9a9a")
 ax.plot(x_line, intercept + slope * np.log10(x_line), color=BLUE, lw=2)
 ax.scatter(top["gdp_pc"], top["life_exp"], s=90, color=ORANGE, zorder=3)
 for _, r in top.iterrows():
-    ax.annotate(f"{r['country']} (+{r['gap']:.1f})", (r["gdp_pc"], r["life_exp"]),
-                xytext=offsets.get(r["country"], (8, 8)), textcoords="offset points",
-                color=ORANGE, fontweight="bold", fontsize=10,
-                arrowprops=dict(arrowstyle="-", color=ORANGE, lw=1))
+    label_point(ax, f"{r['country']} (+{r['gap']:.1f})", (r["gdp_pc"], r["life_exp"]),
+                offsets.get(r["country"], (0, 30)))
 ax.set_xscale("log")
 ax.set_ylim(45, 90)
 ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:,.0f}"))
 ax.set_xlabel("GDP per capita (international dollars, 2011 prices, log scale)")
 ax.set_ylabel("Life expectancy at birth (years)")
 ax.grid(axis="y", ls="--", alpha=0.3)
+ax.text(0.99, 0.03, f"{len(fit)} countries. Blue line: life expectancy expected for each income.\n"
+        "Orange: the five countries furthest above it. Hollow: left out (data very uncertain).",
+        transform=ax.transAxes, ha="right", va="bottom", fontsize=8.5, color="#444",
+        bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="#ddd"))
 plt.show()
 ```
 
@@ -253,6 +305,125 @@ for col in tbl.columns[1:]:
     tbl[col] = tbl[col].round(1)
 print(md_table(tbl))
 print("\n: The five countries with the largest positive gaps, 2022 {#tbl-top}\n")
+```
+
+```{python}
+#| label: fig-dumbbell
+#| fig-cap: "Actual and income-expected life expectancy for the five countries, 2022. Blue dots are the values expected for each country's income; orange dots are the actual values."
+dd = top.sort_values("gap")
+fig, ax = plt.subplots(figsize=(8.5, 4.6))
+yy = np.arange(len(dd))
+ax.hlines(yy, dd["expected"], dd["life_exp"], color="#bbbbbb", lw=3.5, zorder=1)
+ax.scatter(dd["expected"], yy, s=120, color=BLUE, zorder=2, label="Expected for the country's income")
+ax.scatter(dd["life_exp"], yy, s=140, color=ORANGE, zorder=3, label="Actual life expectancy")
+for i, (e, act, gp) in enumerate(zip(dd["expected"], dd["life_exp"], dd["gap"])):
+    ax.text(act + 0.5, i, f"{act:.1f}  (+{gp:.1f} yrs)", va="center", fontsize=10.5, fontweight="bold", color="#222")
+    ax.text(e - 0.5, i, f"{e:.1f}", va="center", ha="right", fontsize=10, color=BLUE)
+ax.set_yticks(yy)
+ax.set_yticklabels(dd["country"], fontsize=11)
+ax.set_xlim(63, 85)
+ax.set_xlabel("Life expectancy at birth (years)")
+ax.grid(axis="x", ls="--", alpha=0.3)
+ax.spines["left"].set_visible(False)
+ax.tick_params(axis="y", length=0)
+ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), frameon=False, fontsize=9.5, ncol=2)
+plt.show()
+```
+
+
+## How rare is it?
+
+```{python}
+#| label: fig-waffle
+#| fig-cap: "Each square is one country in 2022, ordered from the largest gap above the income trend."
+from matplotlib.patches import Rectangle
+LIGHT_ORANGE = "#f2b27a"
+g = fit.sort_values("gap", ascending=False).reset_index(drop=True)
+n_c, cols = len(g), 14
+n_rows = int(np.ceil(n_c / cols))
+n_big = int((g["gap"] >= 5).sum())
+fig, ax = plt.subplots(figsize=(9.5, 5.2))
+for i in range(n_c):
+    rr, cc = divmod(i, cols)
+    colour = ORANGE if i < 5 else (LIGHT_ORANGE if i < n_big else GREY)
+    ax.add_patch(Rectangle((cc, n_rows - 1 - rr), 0.86, 0.86, color=colour))
+ax.set_xlim(-0.2, cols + 8.5)
+ax.set_ylim(-0.3, n_rows + 0.2)
+ax.set_aspect("equal")
+ax.axis("off")
+near = g.loc[5:n_big - 1, "country"].tolist()
+lx = cols + 0.7
+ax.add_patch(Rectangle((lx, n_rows - 2.0), 0.6, 0.6, color=ORANGE))
+ax.text(lx + 1.0, n_rows - 1.7, f"Our five: {g.loc[4, 'gap']:.1f} to {g.loc[0, 'gap']:.1f}\nyears above expected", va="center", fontsize=10.5)
+ax.add_patch(Rectangle((lx, n_rows - 4.2), 0.6, 0.6, color=LIGHT_ORANGE))
+ax.text(lx + 1.0, n_rows - 3.9, f"{' and '.join(near)}: almost\ntied with the fifth", va="center", fontsize=10.5)
+ax.add_patch(Rectangle((lx, n_rows - 6.4), 0.6, 0.6, color=GREY))
+ax.text(lx + 1.0, n_rows - 6.1, f"All other countries ({n_c - n_big})", va="center", fontsize=10.5)
+plt.show()
+```
+
+```{python}
+#| label: waffle-text
+#| output: asis
+print(f"Only {n_big} of {n_c} countries ({n_big / n_c:.0%}) live five or more years longer than their income predicts. "
+      f"Our five are the ones with the largest gaps, but {' and '.join(near)} are almost tied with the fifth, "
+      f"so the five are good examples rather than a sharply separate group.")
+```
+
+## How fast did they improve?
+
+```{python}
+#| label: fig-change
+#| fig-cap: "Life expectancy in 2000 and 2022 for the five countries and the typical country (median start value and median gain)."
+l0 = life[life["year"] == 2000][["country", "life_exp"]].rename(columns={"life_exp": "y0"})
+l1 = life[life["year"] == 2022][["country", "life_exp"]].rename(columns={"life_exp": "y1"})
+sl = fit[["country"]].merge(l0, on="country").merge(l1, on="country")
+sl["chg"] = sl["y1"] - sl["y0"]
+typ_start, typ_chg = sl["y0"].median(), sl["chg"].median()
+five_rows = sl[sl["country"].isin(five)].set_index("country").loc[five]
+
+
+def spread(vals, gap):
+    """Nudge label positions apart so they do not overlap."""
+    vals = np.array(vals, float)
+    order = np.argsort(vals)
+    out = vals.copy()
+    for k in range(1, len(order)):
+        if out[order[k]] - out[order[k - 1]] < gap:
+            out[order[k]] = out[order[k - 1]] + gap
+    return out
+
+
+names = five + ["Typical country"]
+y0s = list(five_rows["y0"]) + [typ_start]
+y1s = list(five_rows["y1"]) + [typ_start + typ_chg]
+fig, ax = plt.subplots(figsize=(10, 5.6))
+for nm, a0, a1 in zip(names, y0s, y1s):
+    typ = nm == "Typical country"
+    ax.plot([0, 1], [a0, a1], color="#777" if typ else ORANGE, lw=2.2, ls="--" if typ else "-", marker="o", ms=6)
+for nm, a0, a1, lp, rp in zip(names, y0s, y1s, spread(y0s, 1.15), spread(y1s, 1.15)):
+    typ = nm == "Typical country"
+    ax.text(-0.03, lp, f"{nm}  {a0:.1f}", ha="right", va="center", fontsize=10.5, color="#555" if typ else "#222",
+            fontweight="normal" if typ else "bold")
+    ax.text(1.03, rp, f"{nm}  {a1:.1f}  (+{a1 - a0:.1f})", ha="left", va="center", fontsize=10.5,
+            color="#555" if typ else "#222", fontweight="normal" if typ else "bold")
+ax.set_xlim(-0.6, 1.75)
+ax.set_ylim(58, 83)
+ax.set_xticks([0, 1])
+ax.set_xticklabels(["2000", "2022"], fontsize=12)
+ax.set_yticks([])
+ax.spines[["left", "bottom"]].set_visible(False)
+ax.tick_params(length=0)
+plt.show()
+```
+
+```{python}
+#| label: change-text
+#| output: asis
+bang = five_rows.loc["Bangladesh"]
+print(f"Since 2000, the typical country gained about {typ_chg:.0f} years of life expectancy. Bangladesh gained "
+      f"{bang['chg']:.0f}, while Cuba, which started high, gained only {five_rows.loc['Cuba', 'chg']:.1f}. "
+      f"The five countries did not all travel the same road to their current position.")
 ```
 
 # 3. Beyond income: what else might matter?
@@ -270,9 +441,10 @@ colours = [ORANGE if r >= 1 else "#7570b3" for r in t["hx_ratio"]]
 ax.barh(t["country"], t["hx_ratio"] - 1, left=1, color=colours, height=0.55)
 ax.axvline(1, color="#333", lw=1.2)
 ax.set_xscale("log")
-ax.set_xlim(0.3, 9)
+ax.set_xlim(0.3, 18)
 ax.set_xticks([0.3, 0.5, 1, 2, 4])
 ax.set_xticklabels(["0.3x", "0.5x", "1x", "2x", "4x"])
+ax.xaxis.set_minor_formatter(NullFormatter())
 for i, (_, r) in enumerate(t.iterrows()):
     ax.text(max(r["hx_ratio"], 1) * 1.1, i, f"{r['hx_ratio']:.1f}x   (gap +{r['gap']:.1f} yrs)", va="center", fontsize=10)
 ax.spines["left"].set_visible(False)
@@ -305,15 +477,14 @@ ax.axvline(1, color="#999", lw=1, ls="--")
 ax.scatter(c["cm_ratio"], c["gap"], s=28, color=GREY, alpha=0.85, lw=0)
 h = c[c["country"].isin(five)]
 ax.scatter(h["cm_ratio"], h["gap"], s=90, color=ORANGE, zorder=3)
-label_offsets = {"Cuba": (-55, 12), "Nicaragua": (-5, 42), "Cape Verde": (-75, -42),
-                 "Lebanon": (-5, 48), "Bangladesh": (40, 30)}
+label_offsets = {"Cuba": (-50, 26), "Nicaragua": (10, 50), "Cape Verde": (-70, -40),
+                 "Lebanon": (-15, 50), "Bangladesh": (55, 32)}
 for _, r in h.iterrows():
-    ax.annotate(r["country"], (r["cm_ratio"], r["gap"]), xytext=label_offsets.get(r["country"], (8, 8)),
-                textcoords="offset points", color=ORANGE, fontweight="bold",
-                arrowprops=dict(arrowstyle="-", color=ORANGE, lw=1))
+    label_point(ax, r["country"], (r["cm_ratio"], r["gap"]), label_offsets.get(r["country"], (0, 30)))
 ax.set_xscale("log")
 ax.set_xticks([0.25, 0.5, 1, 2, 4])
 ax.set_xticklabels(["0.25x", "0.5x", "1x", "2x", "4x"])
+ax.xaxis.set_minor_formatter(NullFormatter())
 ax.set_xlabel("Child mortality relative to income peers (below 1x = fewer child deaths than expected)")
 ax.set_ylabel("Life expectancy gap (years)")
 ax.grid(ls="--", alpha=0.3)
@@ -356,16 +527,14 @@ def diff_chart(df, xcol, xlabel, offsets):
     hh = df[df["country"].isin(five)]
     ax.scatter(hh[xcol], hh["gap"], s=90, color=ORANGE, zorder=3)
     for _, r in hh.iterrows():
-        ax.annotate(r["country"], (r[xcol], r["gap"]), xytext=offsets.get(r["country"], (10, 12)),
-                    textcoords="offset points", color=ORANGE, fontweight="bold",
-                    arrowprops=dict(arrowstyle="-", color=ORANGE, lw=1))
+        label_point(ax, r["country"], (r[xcol], r["gap"]), offsets.get(r["country"], (0, 30)))
     ax.set_xlabel(xlabel)
     ax.set_ylabel("Life expectancy gap (years)")
     ax.grid(ls="--", alpha=0.3)
     plt.show()
 
 diff_chart(sn, "san_diff", "Sanitation relative to income peers (percentage points; above 0 = better than expected)",
-           {"Cuba": (-60, 30), "Lebanon": (10, 34), "Cape Verde": (-30, -38), "Bangladesh": (30, 34)})
+           {"Cuba": (-45, 36), "Lebanon": (50, 36), "Cape Verde": (-20, -42), "Bangladesh": (0, 42)})
 ```
 
 ```{python}
@@ -391,17 +560,30 @@ print(txt)
 #| label: fig-schooling
 #| fig-cap: "Average years of schooling relative to countries with similar incomes (horizontal axis, years; right of zero = more schooling than expected) and the life expectancy gap (vertical axis). Schooling is for 2020."
 diff_chart(sc, "sch_diff", "Years of schooling relative to income peers (years; above 0 = more than expected)",
-           {"Cuba": (-40, 30), "Nicaragua": (20, 34), "Bangladesh": (-70, 32)})
+           {"Cuba": (45, 36), "Nicaragua": (10, 46), "Bangladesh": (-65, 36)})
 ```
 
 ```{python}
 #| label: schooling-text
 #| output: asis
 missing_c = [x for x in five if x not in sc["country"].values]
+sc5 = sc[sc["country"].isin(five)].copy()
+above = sc5.loc[sc5["sch_diff"] > 1, "country"].tolist()
+near_s = sc5.loc[sc5["sch_diff"].between(-1, 1), "country"].tolist()
+below = sc5.loc[sc5["sch_diff"] < -1, "country"].tolist()
+parts = []
+if above:
+    parts.append("more schooling than their income predicts: " + ", ".join(above))
+if near_s:
+    parts.append("approximately typical schooling: " + ", ".join(near_s))
+if below:
+    parts.append("less schooling than their income predicts: " + ", ".join(below))
+if missing_c:
+    parts.append("no schooling data: " + ", ".join(missing_c))
 print(f"Across {len(sc)} countries, years of schooling relative to income has only a weak link to the gap "
-      f"(correlation {corr_sch:.2f}). Among the five, Cuba has clearly more schooling than its income predicts, while "
-      f"Bangladesh and Nicaragua are about typical. {' and '.join(missing_c)} are not in the schooling data. "
-      f"The schooling figures for 2015 onwards are projections, so we treat this result with extra care.")
+      f"(correlation {corr_sch:.2f}). "
+      + ("Among the five, " + "; ".join(parts) + ". " if parts else "")
+      + "Schooling figures for 2015 onwards are projections, so this comparison requires caution.")
 ```
 
 # What this means
@@ -425,7 +607,7 @@ print(f"**Sample.** {len(d)} countries have both life expectancy and income in 2
 
 ## Limits
 
-- One year only, so we cannot say how things change over time.
+- The main income-based model is cross-sectional (2022), so it cannot establish changes over time or causation. The separate historical charts describe trends but do not change that limitation.
 - All results are associations, not causes.
 - Income is measured per person and adjusted for living costs, but both income and spending are estimates, especially for lower-income countries.
 - Spending per person says nothing about the quality or reach of health care.
