@@ -53,6 +53,8 @@ To make our story meaningful to Sarah, we will:
 - Explain unfamiliar concepts such as GDP per capita.
 - Connect global findings to questions relevant to countries such as Kenya.
 
+**Secondary reader: researcher or policymaker.** A data-literate reader who wants transparent definitions, sources, sample restrictions, model assumptions, and uncertainty before interpreting any country ranking. This reader is served by the "How we did it" and "Limits" sections of `index.qmd`, not by the slides.
+
 **Path to value (role of the report for the audience):**
 - Sarah can reuse one or two charts and country examples in class discussions.
 - David can use the comparison of spending and outcomes as input when thinking about what other countries can teach.
@@ -68,6 +70,18 @@ Our preliminary analysis and research have identified the following insights:
 - **Insight 4: Social and environmental conditions may matter.** Child survival appears to account for part of the gap: Cuba, Nicaragua, and Cape Verde have fewer child deaths than their income predicts, while Bangladesh and Lebanon do not. Because child deaths lower life expectancy directly, this is partly built into how life expectancy is calculated. Better-than-expected sanitation also goes together with a larger gap across 153 countries (a clearer link; Cuba, Lebanon, and Cape Verde fit, Bangladesh does not, and Nicaragua is not in the data), while years of schooling shows only a weak link (Lebanon and Cape Verde are not in the data, and values from 2015 onwards are projections). Healthcare access is a candidate for which we have not yet identified a suitable dataset.
 - **Insight 5: Income inequality alone may not explain the differences.** Preliminary analysis suggests a very weak relationship between the Gini index and countries' deviations from income-based life expectancy expectations. However, missing data (only two of the five countries have a recent value) limits the strength of this conclusion.
 - **Insight 6: Global life expectancy has improved, but regional inequalities persist.** Life expectancy has increased substantially across world regions since 1950. The gap between Europe and Africa narrowed from 24.8 years in 1950 to 15.3 years in 2023, but remains considerable.
+
+**Insight priority** (for the story and the slides):
+
+| Insight | Evidence | Priority |
+|---|---|---|
+| Life expectancy has risen in every region, but gaps remain | Regional line chart | Context (setting) |
+| Richer countries tend to live longer | Income scatter with trend line | Essential setup |
+| Five countries live longer than their income predicts | Highlighted scatter, dumbbell, table | **Main insight (Aha moment)** |
+| The five do not spend alike relative to income | Spending comparison | Supporting investigation |
+| Lower child mortality and better sanitation go with larger gaps | Child mortality and sanitation scatters, heatmap | Supporting investigation |
+| Schooling and inequality explain little | Schooling chart, inequality text | Optional; limitations |
+| Over-performance is rare, and improvement speeds differ | Waffle chart, slopegraph | Supporting context |
 
 **Prioritized main insight:**
 Five countries achieve life expectancy approximately 5–7 years above what their income would predict, despite substantial differences in healthcare spending.
@@ -157,8 +171,9 @@ Our story follows a three-part structure.
 - **Healthcare spending comparison:** exploring expenditure relative to income peers among the selected countries.
 - **Socioeconomic factors visualization:** examining additional indicators where data is available.
 - **Historical regional comparison:** providing context on changes in life expectancy and persistent global inequalities.
+- **Same-income strip chart, waffle chart, slopegraph, dumbbell chart, heatmap and world map:** draft visuals for the hook, rarity, change since 2000, actual versus expected, the factors by country, and the spatial view. See `VISUAL_DRAFTS.md`.
 
-The main charts are produced in `Report.qmd`: the regional comparison since 1950, the income scatterplot, the five highlighted countries, the healthcare spending comparison, and child mortality against the gap. Visualizations will prioritize readability, clear labels, accessible explanations, and meaningful comparisons.
+The main charts are produced in `index.qmd`: the regional comparison since 1950, the income scatterplot, the five highlighted countries, the healthcare spending comparison, child mortality, sanitation and schooling against the gap, a same-income chart, a waffle chart, a slopegraph and a dumbbell chart. Standalone scripts produce the heatmap, the map and the other drafts. Visualizations will prioritize readability, clear labels, accessible explanations, and meaningful comparisons.
 
 ## Repository Structure and Deliverables
 
@@ -167,13 +182,17 @@ The analysis is written in Python (pandas, numpy, matplotlib) inside a Quarto re
 | File or folder | Description |
 |---|---|
 | `README.md` | Project overview, audience, insights, and narrative plan |
-| `Report.qmd` | News-style written data story with the full, reproducible analysis (Python) |
-| `index.qmd` | Website entry page |
+| `index.qmd` | The report: news-style written data story with the full, reproducible analysis (Python). It is the website's home page, as in the course template |
 | `presentation.qmd` | Quarto RevealJS narrative presentation |
 | `data/` | The seven Our World in Data files used in the analysis: `life-expectancy.csv`, `gdp-per-capita-maddison-project-database.csv`, `annual-healthcare-expenditure-per-capita.csv`, `child-mortality.csv`, `gini-coefficient.csv`, `share-of-population-with-improved-sanitation-faciltities.csv`, `mean-years-of-schooling-long-run.csv` |
-| `_quarto.yml` | Website configuration |
+| `STORYBOARD.md` | Milestone 4: story point cards, Aha moment, narrative arc, open points |
+| `VISUAL_DRAFTS.md` | Milestone 3: audit of each visual draft and notes for the final versions |
+| `PLANNING_NOTES.md` | The team's Week 8 to 10 planning text in full, with where each part lives now |
+| `figures/` | PNG drafts of the visuals (produced by `index.qmd` and the scripts) |
+| `visual_*.py` | Standalone scripts for the draft visuals (each one reads the CSVs in `data/`) |
+| `_quarto.yml` | Website configuration (report and presentation pages) |
 
-**To render the report:** install the packages with `python -m pip install pandas numpy matplotlib jupyter`, then run `quarto render Report.qmd` from the repository root.
+**To render the report:** install the packages with `python -m pip install pandas numpy matplotlib jupyter`, then run `quarto render` from the repository root. This builds the website into `_site/`; open `_site/index.html` for the report and `_site/presentation.html` for the slides. The report needs the `data/` folder next to it and stops with a clear message if the folder or a file is missing.
 
 **Final deliverables:**
 - A reproducible Quarto HTML report presented in news-article form.
@@ -185,12 +204,21 @@ The analysis is written in Python (pandas, numpy, matplotlib) inside a Quarto re
 **Current stage:** Data story development and refinement.
 
 Our next steps are to:
-1. Render and review `Report.qmd`, then move its charts into the presentation.
+1. Render and review `index.qmd`, then move its charts into the presentation.
 2. Confirm the final main insight using the analysis.
 3. Review how strong the evidence is for each factor (child mortality and sanitation show clearer links than schooling and inequality), and decide which to feature in the final story.
 4. Develop the main visualizations.
 5. Draft the news-style report and narrative presentation.
 6. Review the story for clarity and accessibility to nontechnical audiences.
+
+## Milestone status
+
+| Milestone | Status | Where |
+|---|---|---|
+| 1 Pitch | Done | Data, topic, team, repository |
+| 2 Main insight | Done | Audience, insights and main insight in this README |
+| 3 Visual drafts | Done | `VISUAL_DRAFTS.md`, `index.qmd`, `figures/` |
+| 4 Storyboard | Drafted, team to approve | `STORYBOARD.md`, slide titles in `presentation.qmd` |
 
 ## Key Takeaway
 
