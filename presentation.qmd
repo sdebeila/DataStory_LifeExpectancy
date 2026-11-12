@@ -1,78 +1,100 @@
 ---
-title: "Data Story Example Slides"
-format: revealjs
+title: "Beating the Odds"
+subtitle: "Countries that live longer than their income predicts"
+author: "Shaleen Debeila, Rebeccah Kapsekei, Lutendo Mulea, Morné Magerman, Limpo Shawa"
+format:
+  revealjs:
+    slide-number: true
+    smaller: true
 ---
 
-## Slide-deck for your presentation
+<!--
+Slide titles follow our storyboard (see STORYBOARD.md). Images are drafts from index.qmd and the
+scripts in this repo; save them in a figures/ folder next to this file. Titles are final-ish, visuals are drafts.
+-->
 
-::: {.incremental}
-- This is an exmple file for a slide-deck of a data story in a *narrative structure*. 
-    - See *Effective Data Storytelling*, Brent Dykes (2020), Figure 4.3.
-- **Narrative structure** means, that the slide-deck can be used to tell a story in a **linear way** in front of an audience while going through the slides.  
-- This slidedeck is made with quarto revealjs. Documentation: [Quarto > Presentations > Revealjs](https://quarto.org/docs/presentations/revealjs/)
-- It is written a bit similar to a report. Each `## Headline` becomes a slide title and defines a slide. You just use less text, more often in lists, and more visuals. 
-- You can go interactive easily because it is HTML. 
+## Everyone lives longer, but gaps remain
+
+![](figures/visual4_regions_since_1950.png){fig-align="center" width="75%"}
+
+::: {.notes}
+Card 1, setting. Life expectancy has risen in every region since 1950. The Europe-Africa gap fell from about 25 years to 15, but it is still large.
 :::
 
+## At the same income, life expectancy can differ by 20 years
 
-## Visuals
+![](figures/visual_same_income.png){fig-align="center" width="70%"}
 
-```{r}
-#| echo: false # This shows no code
+::: {.notes}
+Card 2, hook. 12 countries have incomes around 4,000 to 6,000 dollars, yet life expectancy ranges from 54 to 74 years. Nicaragua is at the top. Money matters, but it does not settle how long people live. Why do some countries live longer than their income suggests?
+:::
 
-library(tidyverse)
-df <- read_csv("data/country_panel_wdi_who.csv", show_col_types = FALSE)
-df |>
-  filter(year %in% c(1978, 1998, 2018)) |>
-  ggplot(aes(
-    x = gdp_per_capita_usd,
-    y = life_expectancy_years,
-    size = total_population,
-    color = region
-  )) +
-  geom_point(alpha = 0.8) +
-  scale_x_log10(breaks = c(300, 3000, 30000)) +
-  scale_y_continuous(limits = c(40, 87)) +
-  scale_size_area(max_size = 15) +
-  scale_color_brewer(palette = "Dark2") +
-  facet_wrap(~year) +
-  labs(x = "GDP per capita (USD)", y = "Life expectancy (years)") +
-  theme_minimal() +
-  theme(
-    legend.position = "bottom",
-    panel.border = element_rect(),
-    aspect.ratio = 1
-  ) +
-  guides(
-    size = "none",
-    color = guide_legend(ncol = 4, override.aes = list(size = 4), title = NULL)
-  )
-``` 
+## Income explains about three quarters of the differences
 
+![](figures/visual1_income_vs_life_expectancy.png){fig-align="center" width="70%"}
 
+::: {.notes}
+Card 3. Each dot is one of 161 countries in 2022. The blue line is the life expectancy expected for each income: a straight-line trend of life expectancy against income on a log scale. The gap is actual minus expected.
+:::
 
-## More visuals
+## But five countries beat the odds
 
-```{r}
-df |>
-  filter(year == 2016, total_population > 20000000) |>
-  summarize(
-    mean_var = mean(life_expectancy_years),
-    .by = c(country_name, region)
-  ) |>
-  arrange(mean_var) |>
-  ggplot(aes(
-    x = mean_var,
-    y = country_name |> fct_inorder(),
-    fill = region
-  )) +
-  geom_col() +
-  labs(
-    title = "Life Expectancy, Countries with more than 20 Mio.",
-    x = "",
-    y = "",
-    fill = ""
-  ) +
-  scale_fill_brewer(palette = "Dark2") +
-  theme_minimal(base_size = 8.5)
-```
+![](figures/visual2_top_overperformers.png){fig-align="center" width="62%"}
+
+![](figures/visual_dumbbell_expected.png){fig-align="center" width="62%"}
+
+::: {.notes}
+Card 4, Aha moment. Cuba, Nicaragua, Bangladesh, Lebanon and Cape Verde live roughly 5 to 7 years longer than their income predicts, despite very different healthcare spending. Hollow dots are four countries left out because their data is highly uncertain. Show the dumbbell if there is time: blue is expected, orange is actual.
+:::
+
+## That is rare: only 7 of 161 countries
+
+![](figures/visual_waffle_rare.png){fig-align="center" width="75%"}
+
+::: {.notes}
+Card 5. Each square is one country. Our five have the largest gaps, but Jordan and Albania are almost tied with the fifth, so the five are examples. Optional: the world map (figures/visual_map_gap.png) shows they are scattered across the world.
+:::
+
+## They improved at very different speeds
+
+![](figures/visual_change_2000_2022.png){fig-align="center" width="80%"}
+
+::: {.notes}
+Card 6. Since 2000 the typical country gained about 5 years. Bangladesh gained 12. Cuba started high and gained only 1.7.
+:::
+
+## Healthcare spending is not a single explanation
+
+![](figures/visual3_spending_vs_income_peers.png){fig-align="center" width="70%"}
+
+::: {.notes}
+Card 7. Spending relative to countries with similar incomes. Cuba spends about 4.8 times as much, Bangladesh about half. Cuba's spending estimate is uncertain.
+:::
+
+## Child survival and sanitation offer clues, but no single route
+
+![](figures/visual_heatmap_factors.png){fig-align="center" width="75%"}
+
+::: {.notes}
+Card 8. Child survival and sanitation fit some of the five, but no single factor explains all of them. Bangladesh is not explained by any factor we tested. Grey cells are missing data.
+:::
+
+## Inequality and schooling add little
+
+- Income inequality (Gini): a very weak link to the gap, and recent data for only two of the five
+- Years of schooling: a weak link; the 2020 values are partly projected
+
+::: {.notes}
+Card 9, a short slide. An honest "does not explain much" result is still a finding. Optional: figures/visual5_gini_vs_gap.png.
+:::
+
+## Income matters, but the story is more complex
+
+- Wealth matters, but it does not decide how long people live
+- The exceptions are starting points for questions, not proof of what works
+- These are associations, not causes; one year of data; some estimates are uncertain
+- Next: look closer at individual countries and at the factors we could not test
+
+::: {.notes}
+Card 10, conclusion and next steps. Invite questions.
+:::
