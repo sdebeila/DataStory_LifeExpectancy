@@ -33,7 +33,7 @@ All drafts are produced by `index.qmd` and the scripts in this repo (`visual_bea
 - Context: the main scatter has a short key (what the line, orange dots, and hollow markers mean) and the sample size.
 - New draft visuals for story points that were missing: variance (strip chart), percentages (waffle), and change (slopegraph).
 
-## Teammate's Week 9 adjustment notes: status
+## Team planning notes for Week 9: status
 
 From the team planning notes (`PLANNING_NOTES.md`).
 
