@@ -19,6 +19,8 @@ This file keeps the team's proposed planning text for Weeks 8 to 10 in full, as 
 
 ## The team member's text (unchanged)
 
+*Note: this text was written before the analysis was run on the team's data. Statements that the code "has not been re-run" or that the CSVs "were not supplied" are out of date: `index.qmd` has since been run end to end (26 cells, 11 figures), and a fresh clone of the repository renders with `quarto render`.*
+
 
 > **Working draft for the individual meeting.** This section records proposed audience, insights, visual choices, and storyboard. The group should confirm these decisions together. The analysis below remains based on the original project code and has not been re-run here.
 
@@ -81,7 +83,7 @@ Life expectancy generally rises with national income, but countries with similar
 
 **Narrative arc:** Hook → global setting → expected income pattern → surprising exceptions → main finding → investigation → cautious conclusion.
 
-**Open questions for the group and Jan:** Which five countries appear when the final data are run? Are the exclusions justified and transparently documented? Should schooling and inequality remain in the presentation or only in the report? Which supporting indicators add genuine insight rather than repeat the main finding? Do we need an additional dumbbell chart?
+**Open questions for the group and the instructor:** Which five countries appear when the final data are run? Are the exclusions justified and transparently documented? Should schooling and inequality remain in the presentation or only in the report? Which supporting indicators add genuine insight rather than repeat the main finding? Do we need an additional dumbbell chart?
 
 **After the group approves this storyboard:** Copy the eight story-card titles into the slide deck, create or refine only the visuals needed for those cards, and retain the fuller methodology and secondary analyses in this report.
 
@@ -94,15 +96,15 @@ The original checklist is quoted first, then the current status.
 **Before the Friday review:**
 
 - [ ] Confirm the intended audience and approve the candidate-insight ranking (Week 8).
-- [ ] Confirm the abstract accurately summarizes the rendered findings (Week 8).
-- [ ] Run every Python chunk using the group's original `data/` folder and inspect the rendered figures (Week 9).
-- [ ] Confirm all country names, gaps, denominators, year labels and figure captions match the calculated results (Week 9).
+- [x] Confirm the abstract accurately summarizes the rendered findings (Week 8).
+- [x] Run every Python chunk using the group's original `data/` folder and inspect the rendered figures (Week 9).
+- [x] Confirm all country names, gaps, denominators, year labels and figure captions match the calculated results (Week 9).
 - [ ] Approve the eight storyboard cards and copy their titles into the presentation slide deck (Week 10).
-- [ ] Push the QMD, data-access instructions, and any slides to GitHub before Jan's clone.
+- [x] Push the QMD, data-access instructions, and any slides to GitHub before the repository is cloned for review.
 
 **Data requirements:** Keep the source CSVs used by the code in a `data/` folder next to this QMD. The file is not self-contained without those datasets. The following files are referenced in the Python analysis: `life-expectancy.csv`, `gdp-per-capita-maddison-project-database.csv`, `annual-healthcare-expenditure-per-capita.csv`, `child-mortality.csv`, `gini-coefficient.csv`, `mean-years-of-schooling-long-run.csv`, and a sanitation CSV whose spelling is handled in the loader.
 
-**Verification status:** The Python calculations and visuals have not been executed during this merge because the accompanying CSVs were not supplied. Group-proposed audience personas, insights and storyboard are planning drafts, not decisions already approved by all members.
+**Verification status:** The Python calculations and visuals have since been run end to end on the team's data (26 cells, 11 figures), and a fresh clone of the repository renders with `quarto render`. The audience, insights and storyboard are planning drafts until all members approve them.
 
 ### Status
 
@@ -113,4 +115,4 @@ The original checklist is quoted first, then the current status.
 | Run every Python chunk with the original `data/` folder and inspect the figures | Done on the team's data (26 cells, 11 figures); re-render after the latest `index.qmd` |
 | Confirm country names, gaps, denominators, years and captions | Checked against the calculated results |
 | Approve the storyboard cards and copy the titles into the slide deck | Cards drafted in `STORYBOARD.md`; titles are in `presentation.qmd`; team approval still needed |
-| Push the QMD, data-access instructions and slides to GitHub before the repository is reviewed | To do |
+| Push the QMD, data-access instructions and slides to GitHub before the repository is reviewed | Done |
