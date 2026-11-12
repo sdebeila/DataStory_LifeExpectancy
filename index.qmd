@@ -3,6 +3,7 @@ title: "Beating the Odds"
 subtitle: "Countries That Live Longer Than Their Income Predicts"
 author: "Shaleen Debeila, Rebeccah Kapsekei, Lutendo Mulea, Morné Magerman, Limpo Shawa"
 date: today
+format: html
 jupyter: python3
 execute:
   echo: true
