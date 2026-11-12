@@ -1,6 +1,6 @@
 # Planning notes (Weeks 8 to 10)
 
-This file keeps the team's proposed planning text for Weeks 8 to 10 in full, as written by a teammate, so nothing is lost. The decisions that were agreed or built from it now live in the files listed in the table below, which are the ones to read for the current state of the project.
+This file keeps the team's proposed planning text for Weeks 8 to 10 in full, as proposed by a team member, so nothing is lost. The decisions that were agreed or built from it now live in the files listed in the table below, which are the ones to read for the current state of the project.
 
 ## Where each part lives now
 
@@ -14,10 +14,10 @@ This file keeps the team's proposed planning text for Weeks 8 to 10 in full, as 
 | Dumbbell chart idea | Done | `visual_dumbbell_expected.png`, in `index.qmd` |
 | World map idea | Done (optional) | `visual_map_gap.png` |
 | Week 10 storyboard (eight cards) | Merged | `STORYBOARD.md` (ten cards; the "tension" card became part of the Aha card) and `presentation.qmd` |
-| Open questions for the group and Jan | Merged | `STORYBOARD.md`, "Open points for storyframing" |
+| Open questions for the group and the instructor | Merged | `STORYBOARD.md`, "Open points for storyframing" |
 | Reproducibility and sign-off checklist | Kept below with status | See the checklist at the end of this file |
 
-## The teammate's text (unchanged)
+## The team member's text (unchanged)
 
 
 > **Working draft for the individual meeting.** This section records proposed audience, insights, visual choices, and storyboard. The group should confirm these decisions together. The analysis below remains based on the original project code and has not been re-run here.
@@ -113,4 +113,4 @@ The original checklist is quoted first, then the current status.
 | Run every Python chunk with the original `data/` folder and inspect the figures | Done on the team's data (26 cells, 11 figures); re-render after the latest `index.qmd` |
 | Confirm country names, gaps, denominators, years and captions | Checked against the calculated results |
 | Approve the storyboard cards and copy the titles into the slide deck | Cards drafted in `STORYBOARD.md`; titles are in `presentation.qmd`; team approval still needed |
-| Push the QMD, data-access instructions and slides to GitHub before Jan clones | To do |
+| Push the QMD, data-access instructions and slides to GitHub before the repository is reviewed | To do |
