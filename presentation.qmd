@@ -6,89 +6,152 @@ format:
   revealjs:
     slide-number: true
     smaller: true
+    slide-level: 2
+    center: false
 ---
-
-<!--
-Slide titles follow our storyboard (see STORYBOARD.md). Images are drafts from index.qmd and the
-scripts in this repo; save them in a figures/ folder next to this file. Titles are final-ish, visuals are drafts.
--->
 
 ## Everyone lives longer, but gaps remain
 
-![](figures/visual4_regions_since_1950.png){fig-align="center" width="75%"}
+![](figures/visual4_regions_since_1950.png){fig-align="center" width="62%"}
+
+*Life expectancy is rising everywhere, but not equally. What explains the gaps?*
+
+::: {.footer}
+Source: Our World in Data (UN WPP), 1950 to 2023
+:::
 
 ::: {.notes}
-Card 1, setting. Life expectancy has risen in every region since 1950. The Europe-Africa gap fell from about 25 years to 15, but it is still large.
+Opening: our question is not whether income matters, but why some countries live longer than their income would predict. We compare countries to find exceptions and explore possible explanations, without claiming causation. Card 1, setting. Life expectancy has risen in every region since 1950. The Europe-Africa gap fell from about 25 years to 15, but it is still large.
 :::
 
 ## At the same income, life expectancy can differ by 20 years
 
 ![](figures/visual_same_income.png){fig-align="center" width="70%"}
 
+*So income is not the whole story. How much does it explain?*
+
+::: {.footer}
+Source: Our World in Data (UN WPP; Maddison Project 2023), 2022
+:::
+
 ::: {.notes}
 Card 2, hook. 12 countries have incomes around 4,000 to 6,000 dollars, yet life expectancy ranges from 54 to 74 years. Nicaragua is at the top. Money matters, but it does not settle how long people live. Why do some countries live longer than their income suggests?
 :::
 
-## Income explains about three quarters of the differences
+## Income accounts for much of the variation
 
 ![](figures/visual1_income_vs_life_expectancy.png){fig-align="center" width="70%"}
+
+*Most countries follow the trend. A few sit far above it.*
+
+::: {.footer}
+Source: Our World in Data (UN WPP; Maddison Project 2023), 2022
+:::
 
 ::: {.notes}
 Card 3. Each dot is one of 161 countries in 2022. The blue line is the life expectancy expected for each income: a straight-line trend of life expectancy against income on a log scale. The gap is actual minus expected.
 :::
 
-## But five countries beat the odds
+## Five countries live longer than income predicts
 
-![](figures/visual2_top_overperformers.png){fig-align="center" width="62%"}
+![](figures/visual2_top_overperformers.png){fig-align="center" width="72%"}
 
-![](figures/visual_dumbbell_expected.png){fig-align="center" width="62%"}
+*Cuba, Nicaragua, Bangladesh, Lebanon and Cape Verde stand out. How large are their gaps?*
 
-::: {.notes}
-Card 4, Aha moment. Cuba, Nicaragua, Bangladesh, Lebanon and Cape Verde live roughly 5 to 7 years longer than their income predicts, despite very different healthcare spending. Hollow dots are four countries left out because their data is highly uncertain. Show the dumbbell if there is time: blue is expected, orange is actual.
+::: {.footer}
+Source: Our World in Data (UN WPP; Maddison Project 2023), 2022
 :::
 
-## That is rare: only 7 of 161 countries
+::: {.notes}
+Card 4, Aha moment. Cuba, Nicaragua, Bangladesh, Lebanon and Cape Verde live roughly 5 to 7 years longer than their income predicts. Explain that the gap is observed minus model-predicted life expectancy. Some uncertain country estimates were excluded from the ranking. Next, compare observed and predicted values directly.
+:::
+
+## The gap is observed minus predicted life expectancy
+
+![](figures/visual_dumbbell_expected.png){fig-align="center" width="76%"}
+
+*The difference between the observed and model-predicted values defines “beating the odds.”*
+
+::: {.footer}
+Source: Our World in Data (UN WPP; Maddison Project 2023), 2022
+:::
+
+::: {.notes}
+Explain how to read the two endpoints for each country. These are differences relative to a statistical trend, not evidence that income causes a particular life expectancy. Transition: how uncommon are such large positive gaps?
+:::
+
+## Large positive gaps are uncommon
 
 ![](figures/visual_waffle_rare.png){fig-align="center" width="75%"}
+
+*Did these countries always do well, or did they catch up?*
+
+::: {.footer}
+Source: Our World in Data (UN WPP; Maddison Project 2023), 2022
+:::
 
 ::: {.notes}
 Card 5. Each square is one country. Our five have the largest gaps, but Jordan and Albania are almost tied with the fifth, so the five are examples. Optional: the world map (figures/visual_map_gap.png) shows they are scattered across the world.
 :::
 
-## They improved at very different speeds
+## The five countries followed different trajectories
 
 ![](figures/visual_change_2000_2022.png){fig-align="center" width="80%"}
+
+*Is healthcare spending the reason?*
+
+::: {.footer}
+Source: Our World in Data (UN WPP), 2000 to 2022
+:::
 
 ::: {.notes}
 Card 6. Since 2000 the typical country gained about 5 years. Bangladesh gained 12. Cuba started high and gained only 1.7.
 :::
 
-## Healthcare spending is not a single explanation
+## Healthcare spending alone cannot explain the pattern
 
 ![](figures/visual3_spending_vs_income_peers.png){fig-align="center" width="70%"}
+
+*If not spending alone, what else could help?*
+
+::: {.footer}
+Source: Our World in Data (WHO via World Bank; Maddison Project 2023), 2022
+:::
 
 ::: {.notes}
 Card 7. Spending relative to countries with similar incomes. Cuba spends about 4.8 times as much, Bangladesh about half. Cuba's spending estimate is uncertain.
 :::
 
-## Child survival and sanitation offer clues, but no single route
+## Child survival and sanitation offer partial clues
 
 ![](figures/visual_heatmap_factors.png){fig-align="center" width="75%"}
+
+*What about inequality and schooling?*
+
+::: {.footer}
+Source: Our World in Data (UN IGME; WHO/UNICEF JMP; World Bank), latest year available
+:::
 
 ::: {.notes}
 Card 8. Child survival and sanitation fit some of the five, but no single factor explains all of them. Bangladesh is not explained by any factor we tested. Grey cells are missing data.
 :::
 
-## Inequality and schooling add little
+## Inequality and schooling show weak associations
 
 - Income inequality (Gini): a very weak link to the gap, and recent data for only two of the five
 - Years of schooling: a weak link; the 2020 values are partly projected
+
+*So what is the overall picture?*
+
+::: {.footer}
+Source: Our World in Data (World Bank PIP; Barro and Lee)
+:::
 
 ::: {.notes}
 Card 9, a short slide. An honest "does not explain much" result is still a finding. Optional: figures/visual5_gini_vs_gap.png.
 :::
 
-## Income matters, but the story is more complex
+## Income matters, but it is not destiny
 
 - Wealth matters, but it does not decide how long people live
 - The exceptions are starting points for questions, not proof of what works
@@ -97,4 +160,16 @@ Card 9, a short slide. An honest "does not explain much" result is still a findi
 
 ::: {.notes}
 Card 10, conclusion and next steps. Invite questions.
+:::
+
+## Sources and interpretation notes
+
+- Our World in Data: life expectancy (UN World Population Prospects), GDP per capita (Maddison Project 2023)
+- Our World in Data: health spending (WHO / World Bank), child mortality (UN IGME), sanitation (WHO/UNICEF JMP)
+- Our World in Data: inequality (World Bank PIP), schooling (Barro and Lee)
+- Main cross-sectional comparison: 2022; other indicators use their stated years or latest available values
+- The fitted income trend and observed–predicted gaps describe **associations, not causal effects**
+
+::: {.notes}
+Check exact indicator links, retrieval dates, model specification, and sample sizes against the HTML report before final submission.
 :::
